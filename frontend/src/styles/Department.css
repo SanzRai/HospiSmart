@@ -1,0 +1,167 @@
+:root {
+  --primary-color: #1976d2; 
+  --secondary-color:  #FF7043; 
+  --bg-light: #f9fafc;
+  --text-dark: #333;
+  --text-light: #555;
+}
+
+.department-page {
+  background: var(--bg-light);
+  padding: 90px 70px;
+  min-height: 100vh;
+  font-family: "Roboto", sans-serif;
+  color: var(--text-dark);
+}
+
+.department-header {
+  text-align: center;
+  margin-bottom: 70px;
+}
+
+.department-header h1 {
+  font-size: 2.9rem;
+  color: var(--primary-color);
+  margin-bottom: 15px;
+}
+
+.department-header p {
+  font-size: 1.15rem;
+  color: var(--text-light);
+  max-width: 750px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+
+.departments-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 45px;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.department-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  min-height: 520px;
+}
+
+.department-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 32px rgba(25, 118, 210, 0.15);
+}
+
+
+.department-image {
+  height: 260px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.department-image .overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(25, 118, 210, 0.65);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-align: center;
+  transition: background 0.3s ease;
+}
+
+.department-card:hover .overlay {
+  background: #FF7043;
+}
+
+.overlay .icon {
+  font-size: 2.6rem;
+  margin-bottom: 10px;
+}
+
+.overlay h2 {
+  font-size: 1.6rem;
+  letter-spacing: 0.5px;
+}
+
+
+.department-info {
+  padding: 25px 28px 30px;
+}
+
+.department-info p {
+  font-size: 1rem;
+  color: var(--text-light);
+  margin-bottom: 22px;
+  line-height: 1.7;
+}
+
+.doctor-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.doctor-card {
+  background: #f4f8ff;
+  padding: 12px 15px;
+  border-radius: 12px;
+  text-align: center;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.doctor-card:hover {
+  background: #e3f2fd;
+  transform: scale(1.05);
+}
+
+.doctor-card h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.doctor-card span {
+  display: block;
+  font-size: 0.88rem;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+
+@media (max-width: 1024px) {
+  .departments-container {
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .department-page {
+    padding: 60px 25px;
+  }
+
+  .department-header h1 {
+    font-size: 2.2rem;
+  }
+
+  .department-header p {
+    font-size: 1rem;
+  }
+
+  .departments-container {
+    grid-template-columns: 1fr;
+  }
+
+  .doctor-list {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,166 @@
+:root {
+  --primary-color: #1976D2;
+  --secondary-color: #64B5F6;
+  --accent-gradient: linear-gradient(90deg, #64B5F6, #1976D2);
+  --bg-color: #F9FAFB;
+  --text-dark: #333333;
+  --text-light: #666666;
+  --button-action: #FF7043;
+  --alert-critical: #E74C3C;
+  --success-color: #27AE60;
+  --warning-color: #F39C12;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 5%;
+  background: var(--accent-gradient);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  height: 70px;
+  transform: scale(2);
+  margin-right: 5px;
+}
+
+.hospital-name {
+  font-size: 1.6rem;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  color: white !important;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.navbar-right a {
+  position: relative;
+  font-size: 1.2rem;
+  color: white;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.navbar-right a.active {
+  background-color: #FF7043;
+  color: white;
+  font-weight: 600;
+}
+
+.navbar-right a::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 0;
+  height: 2.5px;
+  background-color: #ff8c42;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.navbar-right a:hover {
+  color: white;                  
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.navbar-right a:hover::after {
+  width: 100%;
+}
+
+/* LOGIN BUTTON */
+.login-btn {
+  background-color: #FF7043;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.login-btn:hover {
+  background-color: #ff8c42;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+.btn-primary {
+  background-color: var(--button-action);
+  font-size: 1.2rem;
+  color: white;
+  padding: 12px 25px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 992px) {
+  .navbar {
+    padding: 15px 4%;
+  }
+  
+  .navbar-right {
+    gap: 20px;
+  }
+  
+  .navbar-right a {
+    font-size: 1.05rem;
+    padding: 6px 12px;
+  }
+  
+  .login-btn {
+    padding: 9px 20px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    padding: 12px 5%;
+  }
+  
+  .navbar-left {
+    margin-bottom: 12px;
+  }
+  
+  .navbar-right {
+    flex-direction: row;
+    justify-content: center;
+    gap: 16px;
+    width: 100%;
+  }
+  
+  .login-btn {
+    margin-top: 8px;
+  }
+}

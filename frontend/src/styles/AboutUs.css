@@ -1,0 +1,180 @@
+.aboutus-container {
+  background-color: #f9fafb;
+  color: #333;
+  font-family: 'Roboto', sans-serif;
+  scroll-behavior: smooth;
+}
+
+/* Hero Section */
+.about-hero {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 60px 10%;
+  gap: 30px;
+  background-color: #f9fafb; /* same background for consistency */
+}
+
+.about-text {
+  flex: 1;
+  min-width: 300px;
+  max-width: 600px;
+}
+
+.about-text h1 {
+  font-size: 2.5rem;
+  color: #1976D2;
+  margin-bottom: 20px;
+}
+
+.about-text p {
+  font-size: 1.2rem;
+  color: #666;
+  line-height: 1.7;
+}
+
+.about-image {
+  flex: 1;
+  min-width: 280px;
+  text-align: center;
+}
+
+.about-image img {
+  max-width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+/* Mission, Vision, Values */
+.about-mission,
+.about-vision,
+.about-values {
+  padding: 50px 10%;
+  text-align: center;
+  background-color: #f9fafb; /* same background for consistency */
+}
+
+.about-mission h2,
+.about-vision h2,
+.about-values h2 {
+  font-size: 2rem;
+  color: #1976D2;
+  margin-bottom: 20px;
+}
+
+.about-mission p,
+.about-vision p {
+  font-size: 1.1rem;
+  color: #666;
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* Values Grid */
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 30px;
+  margin-top: 30px;
+}
+
+.value-card {
+  background-color: #fff;
+  padding: 25px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
+}
+
+.value-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+}
+
+.value-card h3 {
+  color: #FF7043; /* accent color */
+  margin-bottom: 10px;
+  font-size: 1.4rem;
+}
+
+.value-card p {
+  color: #666;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .about-hero {
+    padding: 50px 8%;
+    gap: 25px;
+  }
+
+  .about-text h1 {
+    font-size: 2.2rem;
+  }
+
+  .about-text p {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .about-hero {
+    flex-direction: column-reverse;
+    text-align: center;
+  }
+
+  .about-image {
+    margin-bottom: 30px;
+  }
+
+  .about-text h1 {
+    font-size: 2rem;
+  }
+
+  .about-text p {
+    font-size: 1rem;
+  }
+
+  .about-mission,
+  .about-vision,
+  .about-values {
+    padding: 40px 8%;
+  }
+
+  .values-grid {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-text h1 {
+    font-size: 1.8rem;
+  }
+
+  .about-text p {
+    font-size: 0.95rem;
+  }
+
+  .value-card h3 {
+    font-size: 1.2rem;
+  }
+
+  .value-card p {
+    font-size: 0.95rem;
+  }
+
+  .about-hero {
+    padding: 40px 5%;
+  }
+
+  .about-mission,
+  .about-vision,
+  .about-values {
+    padding: 35px 5%;
+  }
+}
