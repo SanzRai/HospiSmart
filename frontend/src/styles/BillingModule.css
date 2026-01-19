@@ -1,0 +1,616 @@
+/* styles/BillingModule.css */
+
+.billing-module {
+  --primary: #1976d2;
+  --secondary: #64b5f6;
+  --action: #ff7043;
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #ef4444;
+  --bg: #f9fafb;
+  --surface: #ffffff;
+  --muted: #475569;
+  --border: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  padding: 1.5rem 2rem 3rem;
+  max-width: 1600px;
+  margin: 0 auto;
+  background: var(--bg);
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #1e293b;
+}
+
+/* ── Header & Quick Stats ───────────────────────────────────────────── */
+.billing-module .module-header {
+  margin-bottom: 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.billing-module .module-header h2 {
+  font-size: 1.95rem;
+  font-weight: 700;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.billing-module .quick-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+}
+
+.billing-module .quick-stats .stat {
+  background: white;
+  padding: 1rem 1.4rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+  border-left: 5px solid var(--primary);
+}
+
+/* ── Tabs ───────────────────────────────────────────────────────────── */
+.billing-module .module-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0.9rem;
+}
+
+.billing-module .module-tabs button {
+  padding: 0.9rem 1.7rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.billing-module .module-tabs button:hover {
+  color: var(--primary);
+  background: rgba(25, 118, 210, 0.05);
+}
+
+.billing-module .module-tabs button.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 700;
+  background: white;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.12);
+}
+
+/* ── Toast Notification ─────────────────────────────────────────────── */
+.billing-module .toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  padding: 14px 24px;
+  border-radius: var(--radius-md);
+  color: white;
+  font-weight: 500;
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 320px;
+}
+
+.billing-module .toast.success { background: var(--success); }
+.billing-module .toast.error   { background: var(--danger); }
+
+/* ── Tab Content Base ───────────────────────────────────────────────── */
+.billing-module .tab-content {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 1.8rem 2rem;
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Pending Bills Layout ───────────────────────────────────────────── */
+.billing-module .billing-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 2rem;
+}
+
+.billing-module .bills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.billing-module .bill-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.3rem;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.billing-module .bill-card:hover,
+.billing-module .bill-card.selected {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--secondary);
+}
+
+.billing-module .bill-icon {
+  font-size: 2.2rem;
+  color: var(--primary);
+  opacity: 0.85;
+}
+
+.billing-module .bill-info h4 {
+  margin: 0 0 0.4rem;
+  font-size: 1.2rem;
+}
+
+.billing-module .bill-info p,
+.billing-module .bill-info small {
+  margin: 0.2rem 0;
+  color: var(--muted);
+}
+
+.billing-module .bill-amount {
+  margin-left: auto;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* Payment Panel */
+.billing-module .payment-panel {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 1.6rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+}
+
+.billing-module .payment-panel h3 {
+  margin: 0 0 1.4rem;
+  color: var(--primary);
+}
+
+.billing-module .bill-details .detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.9rem;
+  font-size: 1.05rem;
+}
+
+.billing-module .bill-details .amount {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--primary);
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Form Elements */
+.billing-module .payment-options label {
+  display: block;
+  font-weight: 600;
+  margin: 1.2rem 0 0.6rem;
+  color: #2d3748;
+}
+
+.billing-module .radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.4rem;
+}
+
+.billing-module .radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+/* SSF / Insurance / Staff sections */
+.billing-module .ssf-input,
+.billing-module .staff-discount-section input,
+.billing-module .insurance-section select {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+}
+
+.billing-module .ssf-input button {
+  margin-left: 0.8rem;
+  padding: 0.8rem 1.4rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.billing-module .ssf-result {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+}
+
+.billing-module .ssf-result.eligible {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.billing-module .ssf-result.not-eligible {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.billing-module .admin-warning {
+  margin-top: 0.8rem;
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Payment Summary */
+.billing-module .payment-summary {
+  margin: 1.8rem 0;
+  padding: 1.2rem;
+  background: #f8fafc;
+  border-radius: var(--radius-md);
+}
+
+.billing-module .summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+  font-size: 1.05rem;
+}
+
+.billing-module .summary-row.total {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--primary);
+  border-top: 1px solid var(--border);
+  padding-top: 0.8rem;
+  margin-top: 0.6rem;
+}
+
+.billing-module .summary-row.discount span:last-child {
+  color: var(--success);
+}
+
+/* Payment Actions */
+.billing-module .payment-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.billing-module .process-btn,
+.billing-module .cancel-btn {
+  padding: 0.9rem 1.8rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.billing-module .process-btn {
+  background: var(--action);
+  color: white;
+}
+
+.billing-module .process-btn:hover {
+  background: #e65c32;
+}
+
+.billing-module .cancel-btn {
+  background: #718096;
+  color: white;
+}
+
+.billing-module .cancel-btn:hover {
+  background: #5a7184;
+}
+
+/* ── IPD Grid ───────────────────────────────────────────────────────── */
+.billing-module .ipd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 1.4rem;
+}
+
+.billing-module .ipd-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border-left: 5px solid var(--primary);
+}
+
+.billing-module .ipd-card.low-balance {
+  border-left-color: var(--danger);
+}
+
+.billing-module .ipd-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.2rem;
+}
+
+.billing-module .ward-badge {
+  background: #e2e8f0;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.billing-module .ipd-balance .balance-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.7rem;
+}
+
+.billing-module .ipd-balance .bill {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.billing-module .low-balance-alert {
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+  font-weight: 600;
+}
+
+.billing-module .ipd-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.4rem;
+}
+
+.billing-module .deposit-btn,
+.billing-module .print-btn {
+  flex: 1;
+  padding: 0.8rem;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.billing-module .deposit-btn {
+  background: var(--action);
+  color: white;
+}
+
+.billing-module .print-btn {
+  background: var(--primary);
+  color: white;
+}
+
+/* ── Insurance Desk ─────────────────────────────────────────────────── */
+.billing-module .search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+  max-width: 600px;
+}
+
+.billing-module .search-box input {
+  flex: 1;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.billing-module .search-box button {
+  padding: 0.85rem 1.6rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.billing-module .verification-form {
+  background: white;
+  padding: 1.8rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.billing-module .verification-form h4 {
+  margin: 0 0 1.6rem;
+  color: var(--primary);
+}
+
+.billing-module .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.6rem;
+}
+
+.billing-module .form-group label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.billing-module .form-group input,
+.billing-module .form-group select {
+  width: 100%;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.billing-module .file-upload {
+  position: relative;
+  padding: 2.5rem 1rem;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  text-align: center;
+  cursor: pointer;
+}
+
+.billing-module .actions {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.billing-module .approve-btn,
+.billing-module .reject-btn {
+  padding: 0.9rem 1.8rem;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.billing-module .approve-btn {
+  background: var(--success);
+  color: white;
+}
+
+.billing-module .reject-btn {
+  background: var(--danger);
+  color: white;
+}
+
+/* ── Insured Patients Grid ──────────────────────────────────────────── */
+.billing-module .insured-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.4rem;
+}
+
+.billing-module .insured-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border-left: 5px solid var(--primary);
+}
+
+.billing-module .insured-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.billing-module .uhid-badge {
+  background: #e2e8f0;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.billing-module .insured-details p {
+  margin: 0.6rem 0;
+  color: var(--muted);
+}
+
+/* ── Modal (Deposit & Admin Auth) ───────────────────────────────────── */
+.billing-module .modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.billing-module .deposit-modal,
+.billing-module .admin-auth-modal {
+  background: white;
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow-md);
+}
+
+.billing-module .deposit-input input,
+.billing-module .admin-auth-modal input {
+  width: 100%;
+  padding: 0.9rem;
+  margin: 1rem 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.billing-module .modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.6rem;
+}
+
+/* ── Empty & Info States ────────────────────────────────────────────── */
+.billing-module .empty-state,
+.billing-module .info-text {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--muted);
+  font-size: 1.1rem;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .billing-module .billing-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .billing-module .module-tabs {
+    flex-direction: column;
+  }
+
+  .billing-module .module-tabs button {
+    width: 100%;
+  }
+}

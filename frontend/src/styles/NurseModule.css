@@ -1,0 +1,631 @@
+.nurse-module {
+  --primary: #1976d2;
+  --secondary: #64b5f6;
+  --action: #ff7043;
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #ef4444;
+  --bg: #f9fafb;
+  --surface: #ffffff;
+  --muted: #475569;
+  --border: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  padding: 1.5rem 2rem 3rem;
+  max-width: 1600px;
+  margin: 0 auto;
+  background: var(--bg);
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #1e293b;
+}
+
+/* Header */
+.nurse-module .module-header {
+  margin-bottom: 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.nurse-module .module-header h2 {
+  font-size: 1.95rem;
+  font-weight: 700;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+/* Quick Stats */
+.nurse-module .quick-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+}
+
+.nurse-module .quick-stats .stat {
+  background: white;
+  padding: 1rem 1.4rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+  border-left: 5px solid var(--primary);
+}
+
+.nurse-module .quick-stats .stat.alert {
+  border-left-color: var(--danger);
+  color: var(--danger);
+}
+
+/* Tabs */
+.nurse-module .module-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0.9rem;
+}
+
+.nurse-module .module-tabs button {
+  padding: 0.9rem 1.7rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.nurse-module .module-tabs button:hover {
+  color: var(--primary);
+  background: rgba(25, 118, 210, 0.05);
+}
+
+.nurse-module .module-tabs button.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 700;
+  background: white;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.12);
+}
+
+/* Toast Notification */
+.nurse-module .toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  padding: 14px 24px;
+  border-radius: var(--radius-md);
+  color: white;
+  font-weight: 500;
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 320px;
+}
+
+.nurse-module .toast.success { background: var(--success); }
+.nurse-module .toast.error   { background: var(--danger); }
+
+/* Tab Content */
+.nurse-module .tab-content {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 1.8rem 2rem;
+  box-shadow: var(--shadow-md);
+}
+
+/* Queue List (Cards) */
+.nurse-module .queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.nurse-module .queue-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.nurse-module .queue-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--secondary);
+}
+
+.nurse-module .queue-number {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--primary);
+  min-width: 60px;
+  text-align: center;
+}
+
+.nurse-module .queue-info h4 {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.nurse-module .queue-info p {
+  margin: 0.3rem 0;
+  color: var(--muted);
+}
+
+/* Actions Buttons */
+.nurse-module .queue-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-left: auto;
+}
+
+.nurse-module .assign-btn,
+.nurse-module .vitals-btn,
+.nurse-module .call-btn,
+.nurse-module .absent-btn {
+  padding: 0.7rem 1.4rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: none;
+}
+
+.nurse-module .assign-btn,
+.nurse-module .vitals-btn {
+  background: var(--action);
+  color: white;
+}
+
+.nurse-module .assign-btn:hover,
+.nurse-module .vitals-btn:hover {
+  background: #e65c32;
+  transform: translateY(-1px);
+}
+
+.nurse-module .call-btn {
+  background: var(--primary);
+  color: white;
+}
+
+.nurse-module .call-btn:hover {
+  background: #1565c0;
+}
+
+.nurse-module .absent-btn {
+  background: var(--danger);
+  color: white;
+}
+
+.nurse-module .absent-btn:hover {
+  background: #c53030;
+}
+
+/* Assignment & Vitals Forms */
+.nurse-module .assignment-form,
+.nurse-module .vitals-form {
+  margin-top: 2rem;
+  background: white;
+  padding: 1.8rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+}
+
+.nurse-module .assignment-form h4,
+.nurse-module .vitals-form h4 {
+  margin: 0 0 1.4rem;
+  color: var(--primary);
+  font-size: 1.3rem;
+}
+
+.nurse-module .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.6rem;
+}
+
+.nurse-module .form-group label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #2d3748;
+  display: block;
+}
+
+.nurse-module .form-group input,
+.nurse-module .form-group select {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+}
+
+.nurse-module .form-group input:focus,
+.nurse-module .form-group select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.15);
+}
+
+.nurse-module .form-actions {
+  margin-top: 1.8rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.nurse-module .save-btn,
+.nurse-module .cancel-btn {
+  padding: 0.85rem 1.8rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.nurse-module .save-btn {
+  background: var(--action);
+  color: white;
+}
+
+.nurse-module .save-btn:hover {
+  background: #e65c32;
+}
+
+.nurse-module .cancel-btn {
+  background: #718096;
+  color: white;
+}
+
+.nurse-module .cancel-btn:hover {
+  background: #5a7184;
+}
+
+.nurse-module .field-error {
+  color: var(--danger);
+  font-size: 0.9rem;
+  margin-top: 0.4rem;
+  font-weight: 500;
+}
+
+/* Vitals Grid */
+.nurse-module .vitals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.4rem;
+}
+
+.nurse-module .vital-input label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* Bed Census */
+.nurse-module .ward-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.4rem;
+  margin-bottom: 2.5rem;
+}
+
+.nurse-module .ward-stat-card {
+  background: white;
+  padding: 1.4rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border-left: 5px solid var(--primary);
+}
+
+.nurse-module .ward-stat-card h4 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  color: var(--primary);
+}
+
+.nurse-module .stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.nurse-module .stat-row span {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.nurse-module .available   { background: #d1fae5; color: #065f46; }
+.nurse-module .occupied    { background: #fee2e2; color: #991b1b; }
+.nurse-module .maintenance { background: #fefcbf; color: #92400e; }
+.nurse-module .total       { background: #e2e8f0; color: #4a5568; }
+
+/* Bed Grid */
+.nurse-module .bed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.4rem;
+}
+
+.nurse-module .bed-card {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 1.3rem;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.nurse-module .bed-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.nurse-module .bed-card.available   { border: 2px solid var(--success); }
+.nurse-module .bed-card.occupied    { border: 2px solid var(--danger); }
+.nurse-module .bed-card.maintenance { border: 2px dashed var(--warning); }
+
+.nurse-module .bed-number {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--primary);
+  margin-bottom: 0.6rem;
+}
+
+.nurse-module .bed-ward {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.nurse-module .bed-patient {
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  color: var(--danger);
+}
+
+.nurse-module .bed-status-badge {
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  font-weight: 600;
+  margin: 1rem 0;
+  display: inline-block;
+}
+
+.nurse-module .bed-status-badge.available   { background: #d1fae5; color: #065f46; }
+.nurse-module .bed-status-badge.occupied    { background: #fee2e2; color: #991b1b; }
+.nurse-module .bed-status-badge.maintenance { background: #fefcbf; color: #92400e; }
+
+.nurse-module .maintenance-btn {
+  background: var(--warning);
+  color: white;
+  border: none;
+  padding: 0.7rem;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.3rem;
+  transition: all 0.2s;
+}
+
+.nurse-module .maintenance-btn:hover {
+  background: #c05621;
+  transform: scale(1.1);
+}
+
+/* Admission & IPD Cards */
+.nurse-module .admission-list,
+.nurse-module .ipd-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.3rem;
+}
+
+.nurse-module .admission-card,
+.nurse-module .ipd-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border-left: 5px solid var(--primary);
+}
+
+.nurse-module .admission-info h4,
+.nurse-module .ipd-card h4 {
+  margin: 0 0 0.8rem;
+  font-size: 1.25rem;
+}
+
+.nurse-module .admission-info p,
+.nurse-module .ipd-details p {
+  margin: 0.4rem 0;
+  color: var(--muted);
+}
+
+.nurse-module .priority-badge {
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.8rem;
+  display: inline-block;
+}
+
+.nurse-module .priority-badge.high    { background: #fee2e2; color: #991b1b; }
+.nurse-module .priority-badge.medium  { background: #fefcbf; color: #92400e; }
+.nurse-module .priority-badge.low     { background: #d1fae5; color: #065f46; }
+
+.nurse-module .admission-actions select {
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  width: 100%;
+  max-width: 320px;
+  font-size: 1rem;
+}
+
+/* Empty State */
+.nurse-module .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--muted);
+}
+
+.nurse-module .empty-state svg {
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .form-grid,
+  .vitals-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .module-tabs {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .module-tabs button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .queue-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .queue-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+}
+
+/* =========================
+   Nurse Module - Record Vitals
+   ========================= */
+
+.nurse-module .vitals-form.in-card {
+  margin-top: 1.8rem;
+  background: var(--surface);
+  padding: 1.8rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+}
+
+.nurse-module .vitals-form.in-card h4 {
+  margin-bottom: 1.4rem;
+  color: var(--primary);
+  font-size: 1.3rem;
+}
+
+.nurse-module .vitals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.4rem;
+}
+
+.nurse-module .vital-input label {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.nurse-module .vital-input input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+}
+
+.nurse-module .vital-input input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.15);
+}
+
+.nurse-module .vitals-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.8rem;
+}
+
+.nurse-module .vitals-actions .save-btn,
+.nurse-module .vitals-actions .cancel-btn {
+  padding: 0.85rem 1.8rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.nurse-module .vitals-actions .save-btn {
+  background: var(--action);
+  color: white;
+}
+
+.nurse-module .vitals-actions .save-btn:hover {
+  background: #e65c32;
+}
+
+.nurse-module .vitals-actions .cancel-btn {
+  background: #718096;
+  color: white;
+}
+
+.nurse-module .vitals-actions .cancel-btn:hover {
+  background: #5a7184;
+}
+
+.nurse-module .field-error {
+  color: var(--danger);
+  font-size: 0.9rem;
+  margin-bottom: 0.8rem;
+  font-weight: 500;
+}
+

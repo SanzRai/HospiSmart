@@ -1,58 +1,94 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaUser,
   FaLock,
   FaSave,
-  FaEnvelope,
   FaPhone,
   FaMapMarkerAlt,
   FaEye,
   FaEyeSlash,
+  FaArrowLeft,
 } from "react-icons/fa";
+import "../../styles/StaffProfile.css"
 
 const API_BASE_URL = "http://localhost:8080/api";
 
-const StaffProfile = ({ staffInfo }) => {
-  const [profile, setProfile] = useState(null);
+const StaffProfile = () => {
+  const navigate = useNavigate();
+
+  const [staffInfo, setStaffInfo] = useState(null);
+  const [profileData, setProfileData] = useState({
+    phone: "",
+    address: "",
+  });
   const [passData, setPassData] = useState({
     oldPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
   const [message, setMessage] = useState("");
-
-  // Password visibility states
+  const [profileMessage, setProfileMessage] = useState("");
   const [showOld, setShowOld] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
-    fetchProfile();
+    const stored = localStorage.getItem("staffInfo");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      setStaffInfo(parsed);
+      setProfileData({
+        phone: parsed.phone || "",
+        address: parsed.address || "",
+      });
+    }
   }, []);
 
-  const fetchProfile = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/staff/${staffInfo.id}`);
-      if (res.ok) setProfile(await res.json());
-    } catch (e) {
-      console.error(e);
+  const apiFetch = async (url, options = {}) => {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No authentication token found");
+
+    const headers = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+      ...options.headers,
+    };
+
+    const response = await fetch(url, { ...options, headers });
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "Unknown error");
+      throw new Error(`API error ${response.status}: ${errorText}`);
     }
+    return response.json();
   };
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
+    setSavingProfile(true);
+    setProfileMessage("");
+
+    const payload = {
+      phone: profileData.phone,
+      address: profileData.address,
+    };
+
     try {
-      const res = await fetch(`${API_BASE_URL}/staff/${staffInfo.id}`, {
+      await apiFetch(`${API_BASE_URL}/staff/${staffInfo.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: profile.phone,
-          address: profile.address,
-        }),
+        body: JSON.stringify(payload),
       });
-      if (res.ok) alert("Profile Updated!");
-    } catch (e) {
-      alert("Update Failed");
+
+      const updatedInfo = { ...staffInfo, ...payload };
+      localStorage.setItem("staffInfo", JSON.stringify(updatedInfo));
+      setStaffInfo(updatedInfo);
+
+      setProfileMessage("Profile updated successfully!");
+    } catch (err) {
+      setProfileMessage(err.message || "Failed to update profile");
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -65,259 +101,197 @@ const StaffProfile = ({ staffInfo }) => {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/staff/change-password`, {
+      await apiFetch(`${API_BASE_URL}/staff/change-password`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: staffInfo.id,
           oldPassword: passData.oldPassword,
           newPassword: passData.newPassword,
         }),
       });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        alert("Password Changed Successfully");
-        setPassData({
-          oldPassword: "",
-          newPassword: "",
-          confirmPassword: "",
-        });
-        setMessage("");
-      } else {
-        setMessage(data.error);
-      }
-    } catch (e) {
-      setMessage("Error changing password");
+      alert("Password Changed Successfully");
+      setPassData({ oldPassword: "", newPassword: "", confirmPassword: "" });
+      setMessage("");
+    } catch (err) {
+      setMessage(err.message || "Error changing password");
     }
   };
 
-  if (!profile) return <p>Loading...</p>;
+  const goBackToDashboard = () => {
+    navigate("/staff/dashboard");
+  };
+
+  if (!staffInfo) {
+    return (
+      <div className="loading-state">
+        <p>Loading profile...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="staff-profile-page" style={{ padding: "20px" }}>
-      <h2>My Profile</h2>
+    <div className="staff-profile-page">
+      <button className="staff-back-to-dashboard-btn" onClick={goBackToDashboard}>
+        <FaArrowLeft /> Back to Dashboard
+      </button>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "20px",
-        }}
-      >
-        {/* Personal Info */}
-        <div
-          className="card"
-          style={{
-            background: "white",
-            padding: "20px",
-            borderRadius: "8px",
-            boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-          }}
-        >
-          <h3>
+      <h2 className="staff-profile-title">My Profile</h2>
+
+      <div className="staff-profile-grid">
+        <div className="staff-profile-card">
+          <h3 className="staff-card-header">
             <FaUser /> Personal Details
           </h3>
 
           <form onSubmit={handleUpdateProfile}>
-            <div style={{ marginBottom: "10px" }}>
-              <label>Name</label>
+            <div className="staff-form-group">
+              <label>Full Name</label>
               <input
                 type="text"
-                value={profile.name}
+                value={staffInfo.name || ""}
                 disabled
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  background: "#f0f0f0",
-                }}
+                className="staff-disabled-input"
               />
             </div>
 
-            <div style={{ marginBottom: "10px" }}>
+            <div className="staff-form-group">
               <label>Email</label>
               <input
                 type="email"
-                value={profile.email}
+                value={staffInfo.email || ""}
                 disabled
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  background: "#f0f0f0",
-                }}
+                className="staff-disabled-input"
               />
             </div>
 
-            <div style={{ marginBottom: "10px" }}>
+            <div className="staff-form-group">
               <label>Department</label>
               <input
                 type="text"
-                value={profile.department}
+                value={staffInfo.department || ""}
                 disabled
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  background: "#f0f0f0",
-                }}
+                className="staff-disabled-input"
               />
             </div>
 
-            <div style={{ marginBottom: "10px" }}>
+            <div className="staff-form-group">
               <label>
                 <FaPhone /> Phone
               </label>
               <input
                 type="tel"
-                value={profile.phone}
+                value={profileData.phone}
                 onChange={(e) =>
-                  setProfile({ ...profile, phone: e.target.value })
+                  setProfileData({ ...profileData, phone: e.target.value })
                 }
-                style={{ width: "100%", padding: "8px" }}
+                placeholder="e.g. +977 98XXXXXXXX"
               />
             </div>
 
-            <div style={{ marginBottom: "10px" }}>
+            <div className="staff-form-group">
               <label>
                 <FaMapMarkerAlt /> Address
               </label>
               <input
                 type="text"
-                value={profile.address}
+                value={profileData.address}
                 onChange={(e) =>
-                  setProfile({ ...profile, address: e.target.value })
+                  setProfileData({ ...profileData, address: e.target.value })
                 }
-                style={{ width: "100%", padding: "8px" }}
+                placeholder="e.g. Kathmandu, Nepal"
               />
             </div>
 
+            {profileMessage && (
+              <p
+                className={
+                  profileMessage.includes("success") ? "staff-success-message" : "staff-error-message"
+                }
+              >
+                {profileMessage}
+              </p>
+            )}
+
             <button
               type="submit"
-              style={{
-                background: "#2563eb",
-                color: "white",
-                padding: "10px 20px",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-              }}
+              disabled={savingProfile}
+              className={`staff-save-btn ${savingProfile ? "staff-saving" : ""}`}
             >
-              <FaSave /> Update Info
+              {savingProfile ? "Saving..." : "Save Profile"}
             </button>
           </form>
         </div>
 
-        {/* Change Password */}
-        <div
-          className="card"
-          style={{
-            background: "white",
-            padding: "20px",
-            borderRadius: "8px",
-            boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-          }}
-        >
-          <h3>
+        <div className="staff-profile-card">
+          <h3 className="staff-card-header">
             <FaLock /> Change Password
           </h3>
 
           <form onSubmit={handleChangePassword}>
-            {/* Current Password */}
-            <div style={{ marginBottom: "10px", position: "relative" }}>
+            <div className="staff-form-group staff-password-group">
               <label>Current Password</label>
-              <input
-                type={showOld ? "text" : "password"}
-                value={passData.oldPassword}
-                onChange={(e) =>
-                  setPassData({ ...passData, oldPassword: e.target.value })
-                }
-                required
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  paddingRight: "35px",
-                }}
-              />
-              <span
-                onClick={() => setShowOld(!showOld)}
-                style={{
-                  position: "absolute",
-                  right: "10px",
-                  top: "35px",
-                  cursor: "pointer",
-                }}
-              >
-                {showOld ? <FaEyeSlash /> : <FaEye />}
-              </span>
+              <div className="staff-password-wrapper">
+                <input
+                  type={showOld ? "text" : "password"}
+                  value={passData.oldPassword}
+                  onChange={(e) =>
+                    setPassData({ ...passData, oldPassword: e.target.value })
+                  }
+                  required
+                />
+                <span
+                  className="staff-eye-icon"
+                  onClick={() => setShowOld(!showOld)}
+                >
+                  {showOld ? <FaEyeSlash /> : <FaEye />}
+                </span>
+              </div>
             </div>
 
-            {/* New Password */}
-            <div style={{ marginBottom: "10px", position: "relative" }}>
+            <div className="staff-form-group staff-password-group">
               <label>New Password</label>
-              <input
-                type={showNew ? "text" : "password"}
-                value={passData.newPassword}
-                onChange={(e) =>
-                  setPassData({ ...passData, newPassword: e.target.value })
-                }
-                required
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  paddingRight: "35px",
-                }}
-              />
-              <span
-                onClick={() => setShowNew(!showNew)}
-                style={{
-                  position: "absolute",
-                  right: "10px",
-                  top: "35px",
-                  cursor: "pointer",
-                }}
-              >
-                {showNew ? <FaEyeSlash /> : <FaEye />}
-              </span>
+              <div className="staff-password-wrapper">
+                <input
+                  type={showNew ? "text" : "password"}
+                  value={passData.newPassword}
+                  onChange={(e) =>
+                    setPassData({ ...passData, newPassword: e.target.value })
+                  }
+                  required
+                />
+                <span
+                  className="staff-eye-icon"
+                  onClick={() => setShowNew(!showNew)}
+                >
+                  {showNew ? <FaEyeSlash /> : <FaEye />}
+                </span>
+              </div>
             </div>
 
-            {/* Confirm Password */}
-            <div style={{ marginBottom: "10px", position: "relative" }}>
+            <div className="staff-form-group staff-password-group">
               <label>Confirm Password</label>
-              <input
-                type={showConfirm ? "text" : "password"}
-                value={passData.confirmPassword}
-                onChange={(e) =>
-                  setPassData({
-                    ...passData,
-                    confirmPassword: e.target.value,
-                  })
-                }
-                required
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  paddingRight: "35px",
-                }}
-              />
-              <span
-                onClick={() => setShowConfirm(!showConfirm)}
-                style={{
-                  position: "absolute",
-                  right: "10px",
-                  top: "35px",
-                  cursor: "pointer",
-                }}
-              >
-                {showConfirm ? <FaEyeSlash /> : <FaEye />}
-              </span>
+              <div className="staff-password-wrapper">
+                <input
+                  type={showConfirm ? "text" : "password"}
+                  value={passData.confirmPassword}
+                  onChange={(e) =>
+                    setPassData({ ...passData, confirmPassword: e.target.value })
+                  }
+                  required
+                />
+                <span
+                  className="staff-eye-icon"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                >
+                  {showConfirm ? <FaEyeSlash /> : <FaEye />}
+                </span>
+              </div>
             </div>
 
-            {message && <p style={{ color: "red" }}>{message}</p>}
+            {message && <p className="staff-error-message">{message}</p>}
 
-            <button
-              type="submit"
-            >
-              Change Password
+            <button type="submit" className="staff-change-password-btn">
+              <FaLock /> Change Password
             </button>
           </form>
         </div>

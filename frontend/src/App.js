@@ -24,6 +24,8 @@ import PatientRecords from "./pages/Patient/PatientRecords";
 import PatientBilling from "./pages/Patient/PatientBilling";
 import PatientFamily from "./pages/Patient/PatientFamily";
 import PatientQueue from "./pages/Patient/PatientQueue";
+import PatientBookAppointment from "./pages/Patient/PatientBookAppointment";
+import PatientPayment from "./pages/Patient/PatientPayment";
 
 
 import AdminDashboard from "./pages/Admin/AdminDashboard";
@@ -45,7 +47,8 @@ import ReceptionModule from "./pages/Staff/ReceptionModule";
 import NurseModule from "./pages/Staff/NurseModule";
 import LabModule from "./pages/Staff/LabModule";
 import BillingModule from "./pages/Staff/BillingModule";
-import PatientBookAppointment from "./pages/Patient/PatientBookAppointment";
+import StaffProfile from "./pages/Staff/StaffProfile";
+
 
 
 
@@ -76,6 +79,7 @@ function App() {
         <Route path="/patient/profile" element={<PatientProfile/>} />
         <Route path="/patient/appointments" element={<PatientAppointments/>} />
         <Route path="/patient/appointment" element={<PatientBookAppointment />} />
+        <Route path="/patient/payment" element={<PatientPayment />} />
         <Route path="/patient/records" element={<PatientRecords/>} />
         <Route path="/patient/billing" element={<PatientBilling/>} />
         <Route path="/patient/family" element={<PatientFamily />} />
@@ -91,15 +95,17 @@ function App() {
           <Route path="settings" element={<AdminSettings />} />
           </Route>
         
-        <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
-        <Route path="/doctor/profile" element={<DoctorProfile />} />
-        <Route path="/doctor/module" element={<DoctorModule />} />
+        <Route path="/doctor/dashboard" element={<DoctorDashboard />}>
+          <Route index element={<DoctorModule />} />               
+          <Route path="profile" element={<DoctorProfile />} />     
+        </Route>
 
         <Route path="/staff/dashboard"element={<StaffDashboard />} />
         <Route path="/nurse-staff" element={<NurseModule />} />
         <Route path="/reception-staff" element={<ReceptionModule />} />
         <Route path="/lab-staff" element={<LabModule />} />
         <Route path="/billing-staff" element={<BillingModule />} />
+        <Route path="/staff/profile" element={<StaffProfile />} />
         </Routes>
       </Router>
     </LanguageProvider>

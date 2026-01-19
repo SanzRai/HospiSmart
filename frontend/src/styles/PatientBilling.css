@@ -1,0 +1,323 @@
+/* PATIENT BILLING - Professional Hospital Billing Style (Consistent with Family/Records/Queue) */
+.billing-page {
+  --primary: #0ea5e9;
+  --primary-dark: #0369a1;
+  --accent: #f97316;
+  --accent-dark: #ea580c;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --bg-main: #f8fafc;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-card: 0 8px 24px rgba(0,0,0,0.09);
+  --radius: 14px;
+  --radius-sm: 10px;
+
+  background: var(--bg-main);
+  min-height: calc(100vh - 140px);
+  padding: 40px 24px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+
+
+/* Page Header - Hospital Professional Look */
+.page-header {
+  text-align: center;
+  margin-bottom: 3.2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin: 0 0 0.6rem;
+  letter-spacing: -0.5px;
+}
+
+.page-header p {
+  font-size: 1.18rem;
+  color: var(--primary);
+  margin: 0;
+  max-width: 680px;
+  margin-inline: auto;
+}
+
+/* Billing Summary Card - Key Info Highlight */
+.billing-summary-card {
+  background:var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+  padding: 2.4rem;
+  text-align: center;
+  margin-bottom: 3rem;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.billing-summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+}
+
+.billing-summary-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+}
+
+.billing-summary-card h2 {
+  font-size: 1.38rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 1.1rem;
+  letter-spacing: -0.3px;
+}
+
+.billing-summary-card .amount {
+  font-size: 3.6rem;
+  font-weight: 800;
+  color: var(--danger);
+  margin: 0.6rem 0;
+  letter-spacing: -1.5px;
+  line-height: 1;
+}
+
+.billing-summary-card .amount-label {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+.billing-summary-card p {
+  font-size: 1.15rem;
+  color: var(--text-secondary);
+  margin: 0.6rem 0 0;
+  font-weight: 500;
+}
+
+.billing-summary-card .status-badge {
+  display: inline-block;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .billing-summary-card {
+    padding: 1.8rem 1.6rem;
+  }
+
+  .billing-summary-card .amount {
+    font-size: 2.4rem;
+  }
+
+  .billing-summary-card h2 {
+    font-size: 1.3rem;
+  }
+}
+
+/* Tabs - Clean & Modern */
+.tabs-list {
+  display: flex;
+  justify-content: center;
+  gap: 1.2rem;
+  margin-bottom: 2.8rem;
+  flex-wrap: wrap;
+}
+
+.tabs-list button {
+  padding: 1rem 2.2rem;
+  font-size: 1.02rem;
+  font-weight: 600;
+  border-radius: 9px;
+  background: white;
+  border: 2px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.28s ease;
+}
+
+.tabs-list button.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 6px 18px rgba(14,165,233,0.22);
+}
+
+.tabs-list button:hover:not(.active) {
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+/* Bill Item - Realistic Hospital Bill Card */
+.bill-item {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  padding: 2rem;
+  margin-bottom: 1.8rem;
+  transition: all 0.28s ease;
+  max-width: 920px;
+  margin-inline: auto;
+}
+
+.bill-item:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-card);
+}
+
+.bill-item.paid {
+  background: rgba(16,185,129,0.04);
+  border-color: var(--success);
+}
+
+.bill-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.bill-item-header h4 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--primary);
+}
+
+.bill-item-header strong {
+  font-size: 1.45rem;
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.bill-details p {
+  margin: 0.45rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* Pay Now Button - Strong Orange Call-to-Action */
+.btn.btn-action {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1.4rem;
+  transition: all 0.28s ease;
+  box-shadow: 0 6px 18px rgba(249,115,22,0.35);
+  justify-content: center;
+}
+
+.btn.btn-action:hover {
+  background: var(--accent-dark);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(249,115,22,0.45);
+}
+
+/* No Data State */
+.no-data {
+  text-align: center;
+  padding: 7rem 2rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-muted);
+  font-size: 1.3rem;
+  font-weight: 500;
+  max-width: 700px;
+  margin: 2rem auto;
+}
+
+/* Toast - Consistent Across All Pages */
+.toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  padding: 1.1rem 1.8rem;
+  border-radius: var(--radius);
+  background: white;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 1100;
+  border-left: 6px solid;
+  font-weight: 600;
+  max-width: 420px;
+}
+
+.toast.success { border-left-color: var(--success); color: var(--success); }
+.toast.error   { border-left-color: var(--danger); color: var(--danger); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .billing-page {
+    padding: 28px 16px;
+  }
+
+  .page-header h1 {
+    font-size: 2.1rem;
+  }
+
+  .billing-summary-card {
+    padding: 1.8rem;
+  }
+
+  .billing-summary-card .amount {
+    font-size: 2.8rem;
+  }
+
+  .tabs-list {
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .bill-item {
+    padding: 1.6rem;
+  }
+
+  .btn.btn-action {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .billing-summary-card h2 {
+    font-size: 1.4rem;
+  }
+
+  .amount {
+    font-size: 2.4rem;
+  }
+}

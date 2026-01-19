@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FaCalendarPlus, FaClock, FaTimes, FaCheck, FaExclamationCircle, FaRedo } from "react-icons/fa";
+import { 
+  FaCalendarPlus, FaPhone, FaClock, FaTimes, FaCheck, FaExclamationCircle, FaRedo 
+} from "react-icons/fa";
 import PatientNavbar from "../../components/PatientNavbar";
 import PatientFooter from "../../components/PatientFooter";
-import "../../styles/PatientModule.css";
+import "../../styles/PatientAppointment.css";
 
 const API_BASE_URL = "http://localhost:8080/api";
 
 const PatientAppointment = () => {
   const navigate = useNavigate();
+
+  const storedPatientInfo = JSON.parse(localStorage.getItem("patientInfo") || "{}");
+  const patientName = storedPatientInfo.fullName ||
+                     storedPatientInfo.name ||
+                     storedPatientInfo.full_name ||
+                     "Patient";
+
   const [filter, setFilter] = useState("upcoming");
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +35,9 @@ const PatientAppointment = () => {
   const [availableSlots, setAvailableSlots] = useState([]);
   const [doctorIdMap, setDoctorIdMap] = useState({});
 
+  // Add notifications state (same as dashboard)
+  const [notifications, setNotifications] = useState([]);
+
   const patientPhone = localStorage.getItem("patientPhone");
   const token = localStorage.getItem("token");
 
@@ -38,6 +50,7 @@ const PatientAppointment = () => {
 
     try {
       setLoading(true);
+
       const res = await fetch(`${API_BASE_URL}/bookings/online-recent`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -59,25 +72,22 @@ const PatientAppointment = () => {
         const aptDate = apt.appointmentDate || apt.bookedAt || today;
         const isPast = aptDate < today;
 
-        // Get status from backend and normalize
         let status = (apt.status || "pending").toString().trim().toLowerCase();
 
-        // Only auto-mark as completed if it's past AND not already in a final state
-        if (isPast && !["completed", "cancelled", "rescheduled"].includes(status)) {
-          status = "completed";
+        const validStatuses = [
+          "pending", "issued", "vitals_done", "assigned", "calling",
+          "completed", "cancelled", "canceled", "rescheduled", "absent"
+        ];
+
+        if (!validStatuses.includes(status)) {
+          status = isPast ? "completed" : "upcoming"; 
         }
 
-        // Ensure valid status for display
-        if (!["upcoming", "completed", "cancelled", "rescheduled"].includes(status)) {
-          status = isPast ? "completed" : "upcoming";
-        }
-
-        return { ...apt, status, id: apt.id || apt.appointmentId };
+        return { ...apt, status, id: apt.id || apt.appointmentId || apt.tokenNumber };
       });
 
       setAppointments(classified);
 
-      // Load doctor map
       const doctorsRes = await fetch(`${API_BASE_URL}/doctors`);
       if (doctorsRes.ok) {
         const doctors = await doctorsRes.json();
@@ -87,9 +97,15 @@ const PatientAppointment = () => {
         });
         setDoctorIdMap(map);
       }
+
+      // Optional: Add simple notifications (you can expand this later)
+      setNotifications([
+        { id: 'info-1', type: 'info', title: 'Appointment Tips', message: 'Arrive 15 minutes early', icon: FaClock }
+      ]);
+
     } catch (err) {
       console.error("Error loading appointments:", err);
-      setError("Unable to load appointments. Please check your connection and try again.");
+      setError("Unable to load appointments. Please check your connection.");
     } finally {
       setLoading(false);
     }
@@ -103,16 +119,12 @@ const PatientAppointment = () => {
 
   const getStatusIcon = (status) => {
     switch (status?.toLowerCase()) {
-      case "upcoming":
-        return <FaClock className="status-icon upcoming" />;
-      case "completed":
-        return <FaCheck className="status-icon completed" />;
+      case "upcoming":      return <FaClock className="status-icon upcoming" />;
+      case "completed":     return <FaCheck className="status-icon completed" />;
       case "cancelled":
-        return <FaTimes className="status-icon cancelled" />;
-      case "rescheduled":
-        return <FaRedo className="status-icon rescheduled" />;
-      default:
-        return <FaExclamationCircle className="status-icon unknown" />;
+      case "canceled":      return <FaTimes className="status-icon cancelled" />;
+      case "rescheduled":   return <FaRedo className="status-icon rescheduled" />;
+      default:              return <FaExclamationCircle className="status-icon unknown" />;
     }
   };
 
@@ -135,15 +147,14 @@ const PatientAppointment = () => {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        const backendMsg = errData.error || "";
-        throw new Error(backendMsg || "Cancellation failed");
+        throw new Error(errData.message || "Cancellation failed");
       }
 
-      alert("Success! Your appointment has been cancelled.");
+      alert("Your appointment has been successfully cancelled.");
     } catch (err) {
-      const msg = err.message.toLowerCase();
       let userMessage = "Something went wrong. Please try again or contact support.";
 
+      const msg = err.message.toLowerCase();
       if (msg.includes("already cancelled") || msg.includes("already canceled")) {
         userMessage = "This appointment has already been cancelled.";
       } else if (msg.includes("only pending") || msg.includes("cannot cancel")) {
@@ -184,7 +195,7 @@ const PatientAppointment = () => {
           }
         }
       } catch (err) {
-        console.error("Failed to load time slots", err);
+        console.error("Failed to load time slots:", err);
       }
     }
 
@@ -193,7 +204,7 @@ const PatientAppointment = () => {
 
   const confirmReschedule = async () => {
     if (!newDate || !newTime) {
-      alert("Please select a new date and time.");
+      alert("Please select both a new date and time.");
       return;
     }
 
@@ -212,15 +223,14 @@ const PatientAppointment = () => {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        const backendMsg = errData.error || "";
-        throw new Error(backendMsg || "Rescheduling failed");
+        throw new Error(errData.message || "Rescheduling failed");
       }
 
-      alert("Success! Your appointment has been rescheduled.");
+      alert("Your appointment has been successfully rescheduled.");
     } catch (err) {
-      const msg = err.message.toLowerCase();
       let userMessage = "Something went wrong. Please try again or contact support.";
 
+      const msg = err.message.toLowerCase();
       if (msg.includes("past date")) {
         userMessage = "You cannot reschedule to a past date.";
       } else if (msg.includes("only pending") || msg.includes("cannot reschedule")) {
@@ -250,7 +260,12 @@ const PatientAppointment = () => {
 
   return (
     <div className="patient-module">
-      <PatientNavbar patientName="Patient" notificationCount={0} />
+      <PatientNavbar 
+        patientInfo={{ name: patientName }}
+        notifications={notifications}
+        onNotificationsUpdate={setNotifications}
+        notificationCount={notifications.length}
+      />
 
       <main className="appointments-page patient-container">
         <div className="page-header">
@@ -436,6 +451,17 @@ const PatientAppointment = () => {
           </div>
         )}
       </main>
+
+      {/* Floating Emergency Button - same as dashboard */}
+      <motion.button 
+        className="emergency-button"
+        whileHover={{ scale: 1.12 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => window.location.href = 'tel:1134'}
+        aria-label="Emergency Call 1134"
+      >
+        <FaPhone />
+      </motion.button>
 
       <PatientFooter />
     </div>

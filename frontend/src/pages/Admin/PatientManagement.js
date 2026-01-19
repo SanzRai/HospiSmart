@@ -6,19 +6,20 @@ import {
   FaDownload,
   FaEye,
   FaLock,
-  FaFlag,
+  FaFlag, FaSearch,
 } from "react-icons/fa";
 import * as XLSX from "xlsx";
-// import "../../styles/PatientManagement.css";
+import "../../styles/AdminManagement.css";
 
 const API = "http://localhost:8080/api/admin/patients";
 
 const PatientManagement = () => {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState(null); // { type: 'success'/'error', text: '...' }
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
-  const [selectedPatient, setSelectedPatient] = useState(null); // For View Modal
+  const [selectedPatient, setSelectedPatient] = useState(null);
 
   useEffect(() => {
     loadPatients();
@@ -26,103 +27,118 @@ const PatientManagement = () => {
 
   const loadPatients = async () => {
     try {
-      const token = localStorage.getItem("adminToken");
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No authentication token found");
+
       const res = await fetch(API, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) throw new Error("Unauthorized or failed");
+
       const data = await res.json();
       setPatients(data);
+      setMessage(null);
     } catch (err) {
-      alert("Failed to load patients. Login as admin!");
+      setMessage({ type: "error", text: err.message || "Failed to load patients" });
     } finally {
       setLoading(false);
     }
   };
 
-  // Toggle Active / Inactive
   const handleToggle = async (id, current) => {
-    if (!window.confirm(`Really ${current ? "DEACTIVATE" : "ACTIVATE"} this patient?`)) return;
+    const action = current ? "DEACTIVATE" : "ACTIVATE";
+    if (!window.confirm(`Really ${action} this patient?`)) return;
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API}/${id}/toggle-status`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ isActive: !current }),
       });
 
       if (!res.ok) throw new Error();
-      alert(`Patient ${current ? "DEACTIVATED" : "ACTIVATED"}`);
+
+      setMessage({ type: "success", text: `Patient ${action}d successfully` });
       loadPatients();
     } catch {
-      alert("Failed to update status");
+      setMessage({ type: "error", text: "Failed to update status" });
     }
   };
 
-  // Blacklist / Unblacklist
-  const handleBlacklist = async (id, isBlacklisted, currentReason) => {
+  const handleBlacklist = async (id, isBlacklisted) => {
     if (isBlacklisted) {
       if (!window.confirm("Unblacklist this patient?")) return;
+
       try {
-        await fetch(`${API}/${id}/blacklist`, {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API}/${id}/blacklist`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ reason: null }),
         });
-        alert("Patient unblacklisted");
+
+        if (!res.ok) throw new Error();
+
+        setMessage({ type: "success", text: "Patient unblacklisted" });
         loadPatients();
       } catch {
-        alert("Failed");
+        setMessage({ type: "error", text: "Failed to unblacklist" });
       }
       return;
     }
 
     const reason = window.prompt("Blacklist reason:");
-    if (!reason?.trim()) return alert("Reason required!");
+    if (!reason?.trim()) return;
 
     try {
-      await fetch(`${API}/${id}/blacklist`, {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/${id}/blacklist`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ reason: reason.trim() }),
       });
-      alert("Patient blacklisted");
+
+      if (!res.ok) throw new Error();
+
+      setMessage({ type: "success", text: "Patient blacklisted" });
       loadPatients();
     } catch {
-      alert("Failed to blacklist");
+      setMessage({ type: "error", text: "Failed to blacklist" });
     }
   };
 
-  // Reset Password + Simulate SMS
   const handleResetPassword = async (id) => {
     if (!window.confirm("Reset password to 'temp123'?\nSMS will be sent to patient.")) return;
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API}/${id}/reset-password`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) {
-        alert("Password reset to: temp123\nSMS sent to patient!");
-      } else {
-        alert("Failed to reset password");
-      }
+
+      if (!res.ok) throw new Error();
+
+      setMessage({
+        type: "success",
+        text: "Password reset to: temp123\nSMS sent to patient!",
+      });
     } catch {
-      alert("Network error");
+      setMessage({ type: "error", text: "Failed to reset password" });
     }
   };
 
-  // Export Excel
   const exportExcel = () => {
     const data = patients.map(p => ({
       Name: p.name,
@@ -144,10 +160,11 @@ const PatientManagement = () => {
 
   const filtered = patients.filter(p => {
     const q = search.toLowerCase();
-    const match = p.name?.toLowerCase().includes(q) ||
-                  p.phoneNumber?.includes(search) ||
-                  p.email?.toLowerCase().includes(q) ||
-                  p.ssfNumber?.includes(search);
+    const match =
+      p.name?.toLowerCase().includes(q) ||
+      p.phoneNumber?.includes(search) ||
+      p.email?.toLowerCase().includes(q) ||
+      p.ssfNumber?.includes(search);
 
     if (filter === "active") return p.isActive && match;
     if (filter === "inactive") return !p.isActive && match;
@@ -157,22 +174,52 @@ const PatientManagement = () => {
     return match;
   });
 
-  if (loading) return <div className="loading">Loading...</div>;
+  if (loading) return <div className="loading-state">Loading patients...</div>;
 
   return (
-    <div className="patient-management">
-      <h1><FaUserInjured /> Patient Management</h1>
+    <div className="department-management">
+      <div className="header-bar">
+        <h1><FaUserInjured /> Patient Management</h1>
+      </div>
+
+      {message && (
+        <div className={`message-box ${message.type}`}>
+          {message.text}
+        </div>
+      )}
 
       <div className="stats-grid">
-        <div className="stat-card total"><strong>{patients.length}</strong> Total</div>
-        <div className="stat-card active"><strong>{patients.filter(p => p.isActive).length}</strong> Active</div>
-        <div className="stat-card blacklisted"><strong>{patients.filter(p => p.isBlacklisted).length}</strong> Blacklisted</div>
-        <div className="stat-card ssf"><strong>{patients.filter(p => p.ssfNumber).length}</strong> SSF</div>
-        <div className="stat-card insurance"><strong>{patients.filter(p => p.insuranceProvider).length}</strong> Insurance</div>
+        <div className="stat-card total">
+          <strong>{patients.length}</strong>
+          <span>Total</span>
+        </div>
+        <div className="stat-card active">
+          <strong>{patients.filter(p => p.isActive).length}</strong>
+          <span>Active</span>
+        </div>
+        <div className="stat-card blacklisted">
+          <strong>{patients.filter(p => p.isBlacklisted).length}</strong>
+          <span>Blacklisted</span>
+        </div>
+        <div className="stat-card ssf">
+          <strong>{patients.filter(p => p.ssfNumber).length}</strong>
+          <span>SSF</span>
+        </div>
+        <div className="stat-card insurance">
+          <strong>{patients.filter(p => p.insuranceProvider).length}</strong>
+          <span>Insurance</span>
+        </div>
       </div>
 
       <div className="controls">
-        <input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} />
+        <div className="search-box">
+          <FaSearch />
+          <input
+            placeholder="Search..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
         <select value={filter} onChange={e => setFilter(e.target.value)}>
           <option value="all">All</option>
           <option value="active">Active</option>
@@ -181,7 +228,9 @@ const PatientManagement = () => {
           <option value="ssf">SSF</option>
           <option value="insurance">Insurance</option>
         </select>
-        <button onClick={exportExcel} className="export-btn"><FaDownload /> Export</button>
+        <button onClick={exportExcel} className="export-btn">
+          <FaDownload /> Export
+        </button>
       </div>
 
       <div className="table-container">
@@ -212,20 +261,32 @@ const PatientManagement = () => {
                   {p.isBlacklisted && <FaFlag className="flag" title={p.blacklistReason} />}
                 </td>
                 <td className="actions">
-                  <button onClick={() => setSelectedPatient(p)} className="view" title="View Details">
+                  <button
+                    onClick={() => setSelectedPatient(p)}
+                    className="action-btn view"
+                    title="View Details"
+                  >
                     <FaEye />
                   </button>
-                  <button onClick={() => handleToggle(p.id, p.isActive)} className="toggle">
+                  <button
+                    onClick={() => handleToggle(p.id, p.isActive)}
+                    className="action-btn toggle"
+                    title={p.isActive ? "Deactivate" : "Activate"}
+                  >
                     {p.isActive ? <FaBan /> : <FaCheckCircle />}
                   </button>
                   <button
-                    onClick={() => handleBlacklist(p.id, p.isBlacklisted, p.blacklistReason)}
-                    className={p.isBlacklisted ? "unban" : "ban"}
+                    onClick={() => handleBlacklist(p.id, p.isBlacklisted)}
+                    className={`action-btn ${p.isBlacklisted ? "unban" : "ban"}`}
                     title={p.isBlacklisted ? "Unblacklist" : "Blacklist"}
                   >
-                    {p.isBlacklisted ? <FaBan style={{ color: "#10b981" }} /> : <FaFlag />}
+                    {p.isBlacklisted ? <FaBan /> : <FaFlag />}
                   </button>
-                  <button onClick={() => handleResetPassword(p.id)} className="reset">
+                  <button
+                    onClick={() => handleResetPassword(p.id)}
+                    className="action-btn reset"
+                    title="Reset Password"
+                  >
                     <FaLock />
                   </button>
                 </td>
@@ -235,27 +296,36 @@ const PatientManagement = () => {
         </table>
       </div>
 
-      {/* Patient Details Modal */}
+      {/* Simple Patient Details Modal */}
       {selectedPatient && (
         <div className="modal-overlay" onClick={() => setSelectedPatient(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal simple-view" onClick={e => e.stopPropagation()}>
             <h2>Patient Details</h2>
-            <div className="modal-grid">
-              <div><strong>Name:</strong> {selectedPatient.name}</div>
-              <div><strong>Phone:</strong> {selectedPatient.phoneNumber}</div>
-              <div><strong>Email:</strong> {selectedPatient.email || "—"}</div>
-              <div><strong>Gender:</strong> {selectedPatient.gender || "—"}</div>
-              <div><strong>SSF:</strong> {selectedPatient.ssfNumber || "No"}</div>
-              <div><strong>Insurance:</strong> {selectedPatient.insuranceProvider || "No"}</div>
-              <div><strong>Visits:</strong> {selectedPatient.totalVisits}</div>
-              <div><strong>Status:</strong> {selectedPatient.isActive ? "Active" : "Inactive"}</div>
-              <div><strong>Blacklisted:</strong> {selectedPatient.isBlacklisted ? "YES" : "No"}</div>
+            <div className="modal-content">
+              <p><strong>Name:</strong> {selectedPatient.name}</p>
+              <p><strong>Phone:</strong> {selectedPatient.phoneNumber}</p>
+              <p><strong>Email:</strong> {selectedPatient.email || "—"}</p>
+              <p><strong>Gender:</strong> {selectedPatient.gender || "—"}</p>
+              <p><strong>SSF:</strong> {selectedPatient.ssfNumber || "No"}</p>
+              <p><strong>Insurance:</strong> {selectedPatient.insuranceProvider || "No"}</p>
+              <p><strong>Visits:</strong> {selectedPatient.totalVisits}</p>
+              <p>
+                <strong>Status:</strong>{" "}
+                <span className={selectedPatient.isActive ? "status-active" : "status-inactive"}>
+                  {selectedPatient.isActive ? "Active" : "Inactive"}
+                </span>
+              </p>
+              <p>
+                <strong>Blacklisted:</strong> {selectedPatient.isBlacklisted ? "YES" : "No"}
+              </p>
               {selectedPatient.isBlacklisted && (
-                <div><strong>Reason:</strong> {selectedPatient.blacklistReason}</div>
+                <p><strong>Reason:</strong> {selectedPatient.blacklistReason}</p>
               )}
-              <div><strong>Registered:</strong> {new Date(selectedPatient.createdAt).toLocaleDateString()}</div>
+              <p><strong>Registered:</strong> {new Date(selectedPatient.createdAt).toLocaleDateString()}</p>
             </div>
-            <button onClick={() => setSelectedPatient(null)} className="close-btn">Close</button>
+            <button className="close-btn" onClick={() => setSelectedPatient(null)}>
+              Close
+            </button>
           </div>
         </div>
       )}

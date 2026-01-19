@@ -11,7 +11,6 @@ const AdminDashboard = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("userRole")?.toLowerCase();
-
     if (!token || role !== "admin") {
       localStorage.removeItem("token");
       localStorage.removeItem("userRole");
@@ -27,6 +26,10 @@ const AdminDashboard = () => {
     navigate("/login");
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   const menuItems = [
     { path: "", icon: <FaChartPie />, label: "Dashboard" },
     { path: "departments", icon: <FaHospital />, label: "Departments" },
@@ -38,41 +41,54 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="admin-layout flex bg-gray-100 min-h-screen">
+    <div className="admin-layout">
       <motion.aside
-        animate={{ width: sidebarOpen ? 240 : 70 }}
-        className="bg-blue-900 text-white shadow-xl relative"
+        animate={{ width: sidebarOpen ? 260 : 72 }}
+        transition={{ duration: 0.35, ease: "easeInOut" }}
+        className={`sidebar ${sidebarOpen ? "" : "collapsed"}`}
       >
-        <div className="flex items-center justify-between px-4 py-4 border-b border-blue-800">
-          {sidebarOpen && <h2 className="text-xl font-semibold">HospiSmart</h2>}
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-white text-xl">
+        <div className="sidebar-header" onClick={toggleSidebar}>
+          <div className="logo-container">
+            <div className="logo-wrapper">
+              <img src="/logo.png" alt="HospiSmart logo" className="logo" />
+            </div>
+            {sidebarOpen && <span className="hospital-name">HospiSmart</span>}
+          </div>
+
+          <button
+            className="toggle-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleSidebar();
+            }}
+          >
             {sidebarOpen ? <FaTimes /> : <FaBars />}
           </button>
         </div>
 
-        <nav className="mt-4 flex flex-col gap-2">
+        <nav className="sidebar-nav">
           {menuItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               end={item.path === ""}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded hover:bg-blue-700 ${isActive ? "bg-blue-700" : ""}`
+                isActive ? "nav-link active" : "nav-link"
               }
             >
-              <span className="text-lg">{item.icon}</span>
-              {sidebarOpen && <span className="text-sm">{item.label}</span>}
+              <span className="nav-icon">{item.icon}</span>
+              {sidebarOpen && <span className="nav-text">{item.label}</span>}
             </NavLink>
           ))}
         </nav>
 
-        <button onClick={handleLogout} className="logout">
+        <button onClick={handleLogout} className="logout-btn">
           <FaSignOutAlt />
           {sidebarOpen && <span>Logout</span>}
         </button>
       </motion.aside>
 
-      <main className="flex-1 p-5">
+      <main className="main-content">
         <Outlet />
       </main>
     </div>

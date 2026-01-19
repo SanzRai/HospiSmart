@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaCashRegister,
   FaMoneyBillWave,
@@ -12,8 +12,11 @@ import {
   FaCheck,
   FaTimes,
   FaUpload,
-  FaUsers
+  FaUsers,
+  FaCheckCircle,
+  FaTimesCircle,
 } from "react-icons/fa";
+import "../../styles/BillingModule.css";
 
 const API_BASE_URL = "http://localhost:8080/api";
 
@@ -24,7 +27,6 @@ const BillingModule = ({ staffInfo }) => {
   const [insuredPatients, setInsuredPatients] = useState([]);
   const [selectedBill, setSelectedBill] = useState(null);
 
-  // Payment Form State
   const [paymentMode, setPaymentMode] = useState("cash");
   const [discountType, setDiscountType] = useState("none");
   const [discountValue, setDiscountValue] = useState(0);
@@ -34,19 +36,22 @@ const BillingModule = ({ staffInfo }) => {
   const [ssfEligibility, setSsfEligibility] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Admin Auth
   const [adminPassword, setAdminPassword] = useState("");
   const [showAdminAuth, setShowAdminAuth] = useState(false);
 
-  // Deposit
   const [depositAmount, setDepositAmount] = useState("");
   const [selectedIpdPatient, setSelectedIpdPatient] = useState(null);
 
-  // Insurance Desk State
   const [verifyUhid, setVerifyUhid] = useState("");
   const [verifyResult, setVerifyResult] = useState(null);
-  const [insuranceForm, setInsuranceForm] = useState({ providerId: "", policyNumber: "", policyLimit: "" });
+  const [insuranceForm, setInsuranceForm] = useState({
+    providerId: "",
+    policyNumber: "",
+    policyLimit: "",
+  });
   const [cardImage, setCardImage] = useState(null);
+
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     fetchPendingBills();
@@ -57,27 +62,53 @@ const BillingModule = ({ staffInfo }) => {
     }
   }, [activeTab]);
 
-  const fetchPendingBills = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/billing/pending`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("staffToken")}` },
-      });
-      if (res.ok) {
-        setPendingBills(await res.json());
-      }
-    } catch (err) {
-      console.error("Error fetching pending bills:", err);
-    }
+  const showToast = (type, message) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 4800);
   };
+
+  const fetchPendingBills = async () => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/billing/pending-all`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setPendingBills(data);
+    } else {
+      showToast("error", "Failed to load pending bills");
+    }
+  } catch (err) {
+    console.error("Error fetching pending bills:", err);
+    showToast("error", "Network error loading pending bills");
+  }
+};
+
+const fetchInsuredPatients = async () => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/patients`, {  // ← change to /patients
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
+    if (res.ok) {
+      const allPatients = await res.json();
+      // Filter in frontend (less efficient, but works if you don't want to change backend)
+      const insured = allPatients.filter(p => p.insuranceProviderId != null);
+      setInsuredPatients(insured);
+    } else {
+      showToast("error", "Failed to load patients");
+    }
+  } catch (err) {
+    console.error("Error fetching patients:", err);
+    showToast("error", "Network error loading insured patients");
+  }
+};
 
   const fetchIpdBills = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/billing/ipd`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("staffToken")}` },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-      if (res.ok) {
-        setIpdBills(await res.json());
-      }
+      if (res.ok) setIpdBills(await res.json());
     } catch (err) {
       console.error("Error fetching IPD bills:", err);
     }
@@ -86,29 +117,18 @@ const BillingModule = ({ staffInfo }) => {
   const fetchInsuranceProviders = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/insurance/providers`);
-      if (res.ok) {
-        setInsuranceProviders(await res.json());
-      }
+      if (res.ok) setInsuranceProviders(await res.json());
     } catch (err) {
-      console.error("Error fetching providers:", err);
+      console.error("Error fetching insurance providers:", err);
     }
   };
 
-  const fetchInsuredPatients = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/patients?insured=true`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("staffToken")}` },
-      });
-      if (res.ok) {
-        setInsuredPatients(await res.json());
-      }
-    } catch (err) {
-      console.error("Error fetching insured patients:", err);
-    }
-  };
 
   const checkSsfEligibility = async () => {
-    if (!ssfNumber || !selectedBill) return;
+    if (!ssfNumber || !selectedBill) {
+      showToast("error", "SSF Number and selected bill are required");
+      return;
+    }
     setLoading(true);
 
     const serviceCode = selectedBill.serviceType.includes("OPD") ? "OPD-GEN" : "APT-GEN";
@@ -120,13 +140,13 @@ const BillingModule = ({ staffInfo }) => {
       if (res.ok) {
         const data = await res.json();
         setSsfEligibility(data);
+        showToast("success", data.eligible ? "SSF eligibility verified" : "SSF not eligible");
       } else {
-        alert("SSF Verification Failed");
+        showToast("error", "Failed to verify SSF eligibility");
         setSsfEligibility(null);
       }
     } catch (err) {
-      console.error("SSF Check Error:", err);
-      alert("Failed to verify SSF");
+      showToast("error", "Network error during SSF verification");
     } finally {
       setLoading(false);
     }
@@ -141,7 +161,7 @@ const BillingModule = ({ staffInfo }) => {
     }
 
     if (discountType === "insurance" && insurancePolicy) {
-      const provider = insuranceProviders.find(p => p.id.toString() === insurancePolicy);
+      const provider = insuranceProviders.find((p) => p.id.toString() === insurancePolicy);
       if (provider && provider.coveragePercent) {
         amount = amount * (1 - provider.coveragePercent / 100);
       }
@@ -168,12 +188,12 @@ const BillingModule = ({ staffInfo }) => {
       none: "SELF",
       ssf: "SSF",
       insurance: "INSURANCE",
-      staff: "STAFF"
+      staff: "STAFF",
     };
 
     const payload = {
-      bookingType: selectedBill.serviceType.includes("OPD") ? "OPD" : "APPOINTMENT",
-      bookingToken: selectedBill.ticketNumber,
+      bookingType: selectedBill.bookingType || (selectedBill.serviceType.includes("OPD") ? "OPD" : "APPOINTMENT"),
+      bookingToken: selectedBill.tokenNumber || selectedBill.ticketNumber,
       patientName: selectedBill.patientName,
       consultingFee: selectedBill.amount,
       coveredAmount: selectedBill.amount - calculateFinalAmount(),
@@ -190,31 +210,41 @@ const BillingModule = ({ staffInfo }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("staffToken")}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify(payload),
       });
 
       if (res.ok) {
-        alert("Payment processed successfully! Receipt Generated.");
+        showToast("success", "Payment processed successfully! Receipt generated.");
         setSelectedBill(null);
         resetPaymentForm();
         fetchPendingBills();
       } else {
-        const err = await res.text();
-        alert(err || "Payment failed");
+        const err = await res.json();
+        showToast("error", err.error || "Payment processing failed");
       }
     } catch (err) {
-      console.error("Payment Error:", err);
-      alert("Network Error");
+      showToast("error", "Network error during payment processing");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleAdminVerify = () => {
+    if (adminPassword === "admin123") {  // ← Change this in production!
+      setShowAdminAuth(false);
+      setAdminPassword("");
+      handleProcessPayment();
+    } else {
+      showToast("error", "Invalid admin password");
+      setAdminPassword("");
+    }
+  };
+
   const handleAddDeposit = async () => {
-    if (!selectedIpdPatient || !depositAmount || depositAmount <= 0) {
-      alert("Please enter a valid amount");
+    if (!selectedIpdPatient || !depositAmount || Number(depositAmount) <= 0) {
+      showToast("error", "Please enter a valid deposit amount");
       return;
     }
     setLoading(true);
@@ -224,7 +254,7 @@ const BillingModule = ({ staffInfo }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("staffToken")}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
           patientId: selectedIpdPatient.id,
@@ -234,16 +264,15 @@ const BillingModule = ({ staffInfo }) => {
       });
 
       if (res.ok) {
-        alert("Deposit added successfully!");
+        showToast("success", "Deposit added successfully");
         setDepositAmount("");
         fetchIpdBills();
         setSelectedIpdPatient(null);
       } else {
-        alert("Failed to add deposit");
+        showToast("error", "Failed to add deposit");
       }
     } catch (err) {
-      console.error("Deposit Error:", err);
-      alert("Network error");
+      showToast("error", "Network error while adding deposit");
     } finally {
       setLoading(false);
     }
@@ -251,7 +280,7 @@ const BillingModule = ({ staffInfo }) => {
 
   const searchPatientForInsurance = async () => {
     if (!verifyUhid.trim()) {
-      alert("Please enter phone number or UHID");
+      showToast("error", "Please enter phone number or UHID");
       return;
     }
 
@@ -262,19 +291,19 @@ const BillingModule = ({ staffInfo }) => {
         setVerifyResult(data);
         setInsuranceForm({ providerId: "", policyNumber: "", policyLimit: "" });
         setCardImage(null);
+        showToast("success", "Patient found successfully");
       } else {
-        alert("Patient not found");
+        showToast("error", "No patient found with this phone/UHID");
         setVerifyResult(null);
       }
-    } catch (e) {
-      console.error(e);
-      alert("Search failed");
+    } catch (err) {
+      showToast("error", "Error while searching patient");
     }
   };
 
   const handleVerifyInsurance = async () => {
     if (!verifyResult || !insuranceForm.providerId) {
-      alert("Please fill all required fields");
+      showToast("error", "Please select an insurance provider");
       return;
     }
 
@@ -293,23 +322,23 @@ const BillingModule = ({ staffInfo }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("staffToken")}`
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
-        alert("Insurance Verified & Linked to Patient!");
+        showToast("success", "Insurance successfully verified & linked to patient");
         setVerifyResult(null);
         setInsuranceForm({ providerId: "", policyNumber: "", policyLimit: "" });
         setCardImage(null);
         setVerifyUhid("");
+        fetchInsuredPatients();
       } else {
-        alert("Verification Failed");
+        showToast("error", "Failed to verify and link insurance");
       }
-    } catch (e) {
-      console.error(e);
-      alert("Failed to verify insurance");
+    } catch (err) {
+      showToast("error", "Network error during insurance verification");
     } finally {
       setLoading(false);
     }
@@ -327,12 +356,26 @@ const BillingModule = ({ staffInfo }) => {
   };
 
   const getProviderName = (providerId) => {
-    const provider = insuranceProviders.find(p => p.id === providerId);
+    const provider = insuranceProviders.find((p) => p.id === providerId);
     return provider ? provider.name : "Unknown";
   };
 
   return (
     <div className="billing-module">
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            className={`toast ${toast.type}`}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            {toast.type === "success" ? <FaCheckCircle /> : <FaTimesCircle />}
+            <span>{toast.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="module-header">
         <h2>
           <FaCashRegister /> Billing Counter
@@ -354,27 +397,41 @@ const BillingModule = ({ staffInfo }) => {
       </div>
 
       <div className="module-tabs">
-        <button className={activeTab === "pending" ? "active" : ""} onClick={() => setActiveTab("pending")}>
+        <button
+          className={activeTab === "pending" ? "active" : ""}
+          onClick={() => setActiveTab("pending")}
+        >
           <FaReceipt /> Pending Bills
         </button>
-        <button className={activeTab === "ipd" ? "active" : ""} onClick={() => setActiveTab("ipd")}>
+        <button
+          className={activeTab === "ipd" ? "active" : ""}
+          onClick={() => setActiveTab("ipd")}
+        >
           <FaHospitalAlt /> IPD Billing
         </button>
-        <button className={activeTab === "insurance" ? "active" : ""} onClick={() => setActiveTab("insurance")}>
+        <button
+          className={activeTab === "insurance" ? "active" : ""}
+          onClick={() => setActiveTab("insurance")}
+        >
           <FaIdCard /> Insurance Desk
         </button>
-        <button className={activeTab === "insured" ? "active" : ""} onClick={() => setActiveTab("insured")}>
+        <button
+          className={activeTab === "insured" ? "active" : ""}
+          onClick={() => setActiveTab("insured")}
+        >
           <FaUsers /> Insured Patients
         </button>
       </div>
 
-      {/* Pending Bills Tab */}
+      {/* ── Pending Bills ──────────────────────────────────────────────── */}
       {activeTab === "pending" && (
         <motion.div className="tab-content billing-layout" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <div className="bills-list">
             <h3>Pending Payments</h3>
             {pendingBills.length === 0 ? (
-              <div className="empty-state"><p>No pending bills.</p></div>
+              <div className="empty-state">
+                <p>No pending bills at the moment</p>
+              </div>
             ) : (
               pendingBills.map((bill) => (
                 <div
@@ -385,13 +442,15 @@ const BillingModule = ({ staffInfo }) => {
                     resetPaymentForm();
                   }}
                 >
-                  <div className="bill-icon"><FaReceipt /></div>
+                  <div className="bill-icon">
+                    <FaReceipt />
+                  </div>
                   <div className="bill-info">
                     <h4>{bill.patientName}</h4>
-                    <p>{bill.ticketNumber}</p>
+                    <p>{bill.tokenNumber || bill.ticketNumber}</p>
                     <small>{bill.serviceType}</small>
                   </div>
-                  <div className="bill-amount">Rs {bill.amount}</div>
+                  <div className="bill-amount">Rs {bill.amount?.toLocaleString()}</div>
                 </div>
               ))
             )}
@@ -400,22 +459,62 @@ const BillingModule = ({ staffInfo }) => {
           {selectedBill && (
             <div className="payment-panel">
               <h3>Process Payment</h3>
+
               <div className="bill-details">
-                <div className="detail-row"><span>Patient:</span><strong>{selectedBill.patientName}</strong></div>
-                <div className="detail-row"><span>Service:</span><strong>{selectedBill.serviceType}</strong></div>
-                <div className="detail-row amount"><span>Amount:</span><strong>Rs {selectedBill.amount}</strong></div>
+                <div className="detail-row">
+                  <span>Patient:</span>
+                  <strong>{selectedBill.patientName}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Service:</span>
+                  <strong>{selectedBill.serviceType}</strong>
+                </div>
+                <div className="detail-row amount">
+                  <span>Amount:</span>
+                  <strong>Rs {selectedBill.amount?.toLocaleString()}</strong>
+                </div>
               </div>
 
               <div className="payment-options">
                 <label>Payment Mode</label>
                 <div className="radio-group">
-                  <label><input type="radio" value="cash" checked={paymentMode === "cash"} onChange={(e) => setPaymentMode(e.target.value)} /> Cash</label>
-                  <label><input type="radio" value="esewa" checked={paymentMode === "esewa"} onChange={(e) => setPaymentMode(e.target.value)} /> eSewa/QR</label>
-                  <label><input type="radio" value="card" checked={paymentMode === "card"} onChange={(e) => setPaymentMode(e.target.value)} /> Card</label>
+                  <label>
+                    <input
+                      type="radio"
+                      value="cash"
+                      checked={paymentMode === "cash"}
+                      onChange={(e) => setPaymentMode(e.target.value)}
+                    />{" "}
+                    Cash
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      value="esewa"
+                      checked={paymentMode === "esewa"}
+                      onChange={(e) => setPaymentMode(e.target.value)}
+                    />{" "}
+                    eSewa/QR
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      value="card"
+                      checked={paymentMode === "card"}
+                      onChange={(e) => setPaymentMode(e.target.value)}
+                    />{" "}
+                    Card
+                  </label>
                 </div>
 
-                <label>Discount/Coverage</label>
-                <select value={discountType} onChange={(e) => { setDiscountType(e.target.value); setSsfEligibility(null); }}>
+                <label>Discount / Coverage</label>
+                <select
+                  value={discountType}
+                  onChange={(e) => {
+                    setDiscountType(e.target.value);
+                    setSsfEligibility(null);
+                  }}
+                >
                   <option value="none">No Discount</option>
                   <option value="ssf">SSF (Social Security)</option>
                   <option value="insurance">Health Insurance</option>
@@ -426,14 +525,22 @@ const BillingModule = ({ staffInfo }) => {
                   <div className="ssf-section">
                     <label>SSF Number</label>
                     <div className="ssf-input">
-                      <input type="text" placeholder="Enter SSF ID" value={ssfNumber} onChange={(e) => setSsfNumber(e.target.value)} />
-                      <button onClick={checkSsfEligibility} disabled={loading}>Verify</button>
+                      <input
+                        type="text"
+                        placeholder="Enter SSF ID"
+                        value={ssfNumber}
+                        onChange={(e) => setSsfNumber(e.target.value)}
+                      />
+                      <button onClick={checkSsfEligibility} disabled={loading || !ssfNumber.trim()}>
+                        Verify
+                      </button>
                     </div>
+
                     {ssfEligibility && (
                       <div className={`ssf-result ${ssfEligibility.eligible ? "eligible" : "not-eligible"}`}>
                         {ssfEligibility.eligible
-                          ? `Eligible! Covers: Rs ${ssfEligibility.ssfCovers} | Patient Pays: Rs ${ssfEligibility.finalPatientAmount}`
-                          : ssfEligibility.message || "Not Eligible"}
+                          ? `Eligible → Covers: Rs ${ssfEligibility.ssfCovers?.toLocaleString()} | Patient pays: Rs ${ssfEligibility.finalPatientAmount?.toLocaleString()}`
+                          : ssfEligibility.message || "Not eligible for SSF coverage"}
                       </div>
                     )}
                   </div>
@@ -442,7 +549,10 @@ const BillingModule = ({ staffInfo }) => {
                 {discountType === "insurance" && (
                   <div className="insurance-section">
                     <label>Insurance Provider</label>
-                    <select value={insurancePolicy} onChange={(e) => setInsurancePolicy(e.target.value)}>
+                    <select
+                      value={insurancePolicy}
+                      onChange={(e) => setInsurancePolicy(e.target.value)}
+                    >
                       <option value="">Select Provider</option>
                       {insuranceProviders.map((provider) => (
                         <option key={provider.id} value={provider.id}>
@@ -466,7 +576,7 @@ const BillingModule = ({ staffInfo }) => {
                     {discountValue > 10 && (
                       <div className="admin-warning">
                         <FaExclamationTriangle />
-                        <span>Discount 10% requires Admin approval</span>
+                        <span>Discount : 10% requires Admin approval</span>
                       </div>
                     )}
                   </div>
@@ -474,21 +584,28 @@ const BillingModule = ({ staffInfo }) => {
               </div>
 
               <div className="payment-summary">
-                <div className="summary-row"><span>Original Amount:</span><span>Rs {selectedBill.amount}</span></div>
+                <div className="summary-row">
+                  <span>Original Amount:</span>
+                  <span>Rs {selectedBill.amount?.toLocaleString()}</span>
+                </div>
+
                 {discountType !== "none" && (
                   <div className="summary-row discount">
                     <span>Discount/Coverage:</span>
-                    <span>- Rs {selectedBill.amount - calculateFinalAmount()}</span>
+                    <span>- Rs {(selectedBill.amount - calculateFinalAmount())?.toLocaleString()}</span>
                   </div>
                 )}
+
                 <div className="summary-row total">
                   <span>Patient Pays:</span>
-                  <strong>Rs {calculateFinalAmount()}</strong>
+                  <strong>Rs {calculateFinalAmount()?.toLocaleString()}</strong>
                 </div>
               </div>
 
               <div className="payment-actions">
-                <button className="cancel-btn" onClick={() => setSelectedBill(null)}>Cancel</button>
+                <button className="cancel-btn" onClick={() => setSelectedBill(null)}>
+                  Cancel
+                </button>
                 <button className="process-btn" onClick={handleProcessPayment} disabled={loading}>
                   <FaMoneyBillWave /> {loading ? "Processing..." : "Collect Payment"}
                 </button>
@@ -498,47 +615,74 @@ const BillingModule = ({ staffInfo }) => {
         </motion.div>
       )}
 
-      {/* IPD Tab */}
+      {/* ── IPD Billing ────────────────────────────────────────────────── */}
       {activeTab === "ipd" && (
         <motion.div className="tab-content" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <h3><FaHospitalAlt /> Admitted Patients - Running Bills</h3>
+          <h3>
+            <FaHospitalAlt /> Admitted Patients - Running Bills
+          </h3>
+
           <div className="ipd-grid">
-            {ipdBills.length === 0 && <p className="info-text">No active IPD patients found.</p>}
-            {ipdBills.map((patient) => (
-              <div key={patient.id} className={`ipd-card ${patient.depositBalance < 5000 ? "low-balance" : ""}`}>
-                <div className="ipd-header">
-                  <div>
-                    <h4>{patient.patientName}</h4>
-                    <p>UHID: {patient.uhid}</p>
+            {ipdBills.length === 0 ? (
+              <p className="info-text">No active IPD patients found.</p>
+            ) : (
+              ipdBills.map((patient) => (
+                <div
+                  key={patient.id}
+                  className={`ipd-card ${patient.depositBalance < 5000 ? "low-balance" : ""}`}
+                >
+                  <div className="ipd-header">
+                    <div>
+                      <h4>{patient.patientName}</h4>
+                      <p>UHID: {patient.uhid}</p>
+                    </div>
+                    <span className="ward-badge">
+                      {patient.ward} - {patient.bedNumber}
+                    </span>
                   </div>
-                  <span className="ward-badge">{patient.ward} - {patient.bedNumber}</span>
-                </div>
 
-                <div className="ipd-balance">
-                  <div className="balance-row"><span>Running Bill:</span><strong className="bill">Rs {patient.runningBill}</strong></div>
-                  <div className="balance-row">
-                    <span>Deposit Balance:</span>
-                    <strong className={patient.depositBalance < 5000 ? "low" : ""}>Rs {patient.depositBalance}</strong>
+                  <div className="ipd-balance">
+                    <div className="balance-row">
+                      <span>Running Bill:</span>
+                      <strong className="bill">Rs {patient.runningBill?.toLocaleString()}</strong>
+                    </div>
+                    <div className="balance-row">
+                      <span>Deposit Balance:</span>
+                      <strong className={patient.depositBalance < 5000 ? "low" : ""}>
+                        Rs {patient.depositBalance?.toLocaleString()}
+                      </strong>
+                    </div>
+                    {patient.depositBalance < 5000 && (
+                      <div className="low-balance-alert">
+                        <FaExclamationTriangle /> Low balance — please collect deposit!
+                      </div>
+                    )}
                   </div>
-                  {patient.depositBalance < 5000 && (
-                    <div className="low-balance-alert"><FaExclamationTriangle /> Low balance!</div>
-                  )}
-                </div>
 
-                <div className="ipd-actions">
-                  <button onClick={() => setSelectedIpdPatient(patient)} className="deposit-btn">Add Deposit</button>
-                  <button className="print-btn"><FaPrint /> Print Bill</button>
+                  <div className="ipd-actions">
+                    <button onClick={() => setSelectedIpdPatient(patient)} className="deposit-btn">
+                      Add Deposit
+                    </button>
+                    <button className="print-btn">
+                      <FaPrint /> Print Bill
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           {selectedIpdPatient && (
             <div className="modal-overlay" onClick={() => setSelectedIpdPatient(null)}>
               <div className="deposit-modal" onClick={(e) => e.stopPropagation()}>
-                <h3>Add Deposit</h3>
-                <p>Patient: {selectedIpdPatient.patientName} (UHID: {selectedIpdPatient.uhid})</p>
-                <p>Current Balance: Rs {selectedIpdPatient.depositBalance}</p>
+                <h3>Add Security Deposit</h3>
+                <p>
+                  Patient: <strong>{selectedIpdPatient.patientName}</strong>
+                  <br />
+                  UHID: {selectedIpdPatient.uhid}
+                </p>
+                <p>Current Deposit Balance: Rs {selectedIpdPatient.depositBalance?.toLocaleString()}</p>
+
                 <div className="deposit-input">
                   <label>Deposit Amount (Rs)</label>
                   <input
@@ -548,6 +692,7 @@ const BillingModule = ({ staffInfo }) => {
                     placeholder="Enter amount"
                   />
                 </div>
+
                 <div className="modal-actions">
                   <button onClick={() => setSelectedIpdPatient(null)}>Cancel</button>
                   <button onClick={handleAddDeposit} disabled={loading}>
@@ -560,12 +705,14 @@ const BillingModule = ({ staffInfo }) => {
         </motion.div>
       )}
 
-      {/* Insurance Desk Tab */}
+      {/* ── Insurance Desk ─────────────────────────────────────────────── */}
       {activeTab === "insurance" && (
         <motion.div className="tab-content" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <h3><FaIdCard /> Insurance Verification Desk</h3>
+          <h3>
+            <FaIdCard /> Insurance Verification Desk
+          </h3>
 
-          <div className="search-box" style={{ marginBottom: "20px" }}>
+          <div className="search-box">
             <FaSearch className="icon" />
             <input
               placeholder="Search by Phone or UHID"
@@ -573,29 +720,36 @@ const BillingModule = ({ staffInfo }) => {
               onChange={(e) => setVerifyUhid(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && searchPatientForInsurance()}
             />
-            <button onClick={searchPatientForInsurance}>Search</button>
+            <button onClick={searchPatientForInsurance} disabled={loading}>
+              Search
+            </button>
           </div>
 
           {verifyResult && (
             <div className="verification-form">
               <h4>
-                Verify Insurance for: <span style={{ color: "#0056b3" }}>{verifyResult.fullName}</span>
-                {" "} (UHID: {verifyResult.uhid})
+                Verify Insurance for:{" "}
+                <span style={{ color: "#0056b3" }}>{verifyResult.fullName}</span>
+                <br />
+                UHID: {verifyResult.uhid}
               </h4>
 
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Insurance Provider</label>
+                  <label>Insurance Provider *</label>
                   <select
                     value={insuranceForm.providerId}
                     onChange={(e) => setInsuranceForm({ ...insuranceForm, providerId: e.target.value })}
                   >
                     <option value="">Select Provider</option>
                     {insuranceProviders.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
                     ))}
                   </select>
                 </div>
+
                 <div className="form-group">
                   <label>Policy Number</label>
                   <input
@@ -604,6 +758,7 @@ const BillingModule = ({ staffInfo }) => {
                     onChange={(e) => setInsuranceForm({ ...insuranceForm, policyNumber: e.target.value })}
                   />
                 </div>
+
                 <div className="form-group">
                   <label>Coverage Limit (Rs)</label>
                   <input
@@ -613,36 +768,63 @@ const BillingModule = ({ staffInfo }) => {
                     onChange={(e) => setInsuranceForm({ ...insuranceForm, policyLimit: e.target.value })}
                   />
                 </div>
+
                 <div className="form-group">
                   <label>Upload Card Photo (Optional)</label>
                   <div className="file-upload">
                     <FaUpload /> Upload Image
-                    <input type="file" accept="image/*" onChange={(e) => setCardImage(e.target.files[0])} />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setCardImage(e.target.files[0])}
+                    />
                   </div>
-                  {cardImage && <small style={{ color: "green", display: "block", marginTop: "5px" }}>File: {cardImage.name}</small>}
+                  {cardImage && (
+                    <small style={{ color: "green", display: "block", marginTop: "5px" }}>
+                      Selected: {cardImage.name}
+                    </small>
+                  )}
                 </div>
               </div>
 
-              <div className="actions" style={{ marginTop: "20px", display: "flex", gap: "10px" }}>
-                <button onClick={handleVerifyInsurance} className="approve-btn" disabled={loading}>
+              <div className="actions">
+                <button
+                  onClick={handleVerifyInsurance}
+                  className="approve-btn"
+                  disabled={loading || !insuranceForm.providerId}
+                >
                   <FaCheck /> Approve & Link
                 </button>
-                <button onClick={() => { setVerifyResult(null); setVerifyUhid(""); }} className="reject-btn">
+                <button
+                  onClick={() => {
+                    setVerifyResult(null);
+                    setVerifyUhid("");
+                  }}
+                  className="reject-btn"
+                >
                   <FaTimes /> Cancel
                 </button>
               </div>
             </div>
           )}
 
-          {!verifyResult && verifyUhid === "" && <p className="info-text">Search for a patient to verify their insurance details.</p>}
-          {verifyUhid !== "" && !verifyResult && <p className="info-text" style={{ color: "#d32f2f" }}>No patient found. Try another phone/UHID.</p>}
+          {!verifyResult && (
+            <p className="info-text">
+              {verifyUhid
+                ? "No patient found with this phone/UHID."
+                : "Search for a patient to verify their insurance details."}
+            </p>
+          )}
         </motion.div>
       )}
 
-      {/* Insured Patients Tab */}
+      {/* ── Insured Patients List ──────────────────────────────────────── */}
       {activeTab === "insured" && (
         <motion.div className="tab-content" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <h3><FaUsers /> Verified Insured Patients</h3>
+          <h3>
+            <FaUsers /> Verified Insured Patients
+          </h3>
+
           {insuredPatients.length === 0 ? (
             <div className="empty-state">
               <p>No verified insured patients found.</p>
@@ -656,10 +838,21 @@ const BillingModule = ({ staffInfo }) => {
                     <span className="uhid-badge">UHID: {patient.uhid}</span>
                   </div>
                   <div className="insured-details">
-                    <p><strong>Provider:</strong> {getProviderName(patient.insuranceProviderId)}</p>
-                    <p><strong>Policy No:</strong> {patient.insurancePolicyNumber || "N/A"}</p>
-                    <p><strong>Limit:</strong> Rs {patient.insurancePolicyLimit?.toLocaleString() || "Unlimited"}</p>
-                    <p><strong>Verified By:</strong> {patient.insuranceVerifiedBy || "Staff"}</p>
+                    <p>
+                      <strong>Provider:</strong> {getProviderName(patient.insuranceProviderId)}
+                    </p>
+                    <p>
+                      <strong>Policy No:</strong> {patient.insurancePolicyNumber || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Limit:</strong>{" "}
+                      {patient.insurancePolicyLimit
+                        ? `Rs ${patient.insurancePolicyLimit.toLocaleString()}`
+                        : "Unlimited"}
+                    </p>
+                    <p>
+                      <strong>Verified By:</strong> {patient.insuranceVerifiedBy || "Staff"}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -668,35 +861,29 @@ const BillingModule = ({ staffInfo }) => {
         </motion.div>
       )}
 
-      {/* Admin Auth Modal */}
+      {/* Admin Authorization Modal for high discount */}
       {showAdminAuth && (
         <div className="modal-overlay">
           <div className="admin-auth-modal">
             <h3>Admin Authorization Required</h3>
-            <p>Discount greater than 10% requires admin approval</p>
+            <p>For discounts greater than 10%</p>
             <input
               type="password"
               placeholder="Enter Admin Password"
               value={adminPassword}
               onChange={(e) => setAdminPassword(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && adminPassword === "admin123" && (setShowAdminAuth(false), handleProcessPayment())}
+              onKeyPress={(e) => e.key === "Enter" && handleAdminVerify()}
             />
             <div className="modal-actions">
-              <button onClick={() => { setShowAdminAuth(false); setAdminPassword(""); }}>Cancel</button>
               <button
                 onClick={() => {
-                  if (adminPassword === "admin123") {
-                    setShowAdminAuth(false);
-                    setAdminPassword("");
-                    handleProcessPayment();
-                  } else {
-                    alert("Invalid admin password");
-                    setAdminPassword("");
-                  }
+                  setShowAdminAuth(false);
+                  setAdminPassword("");
                 }}
               >
-                Verify & Proceed
+                Cancel
               </button>
+              <button onClick={handleAdminVerify}>Verify & Proceed</button>
             </div>
           </div>
         </div>

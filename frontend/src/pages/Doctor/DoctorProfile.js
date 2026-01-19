@@ -3,45 +3,67 @@ import {
   FaUser,
   FaLock,
   FaSave,
-  FaPhone,
   FaEye,
   FaEyeSlash,
   FaGraduationCap,
   FaCalendarAlt,
   FaClock,
 } from "react-icons/fa";
-import "../../styles/DoctorDashboard.css"; 
 
 const API_BASE_URL = "http://localhost:8080/api";
 
-const DoctorProfile = ({ doctorInfo }) => {
-  const [profile, setProfile] = useState(null);
+const DoctorProfile = () => {
+  const [doctorInfo, setDoctorInfo] = useState(null);
+  const [profileData, setProfileData] = useState({
+    qualifications: "",
+    availableDays: "",
+    startTime: "",
+    endTime: "",
+    consultationFee: "",
+  });
   const [passData, setPassData] = useState({
     oldPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
   const [message, setMessage] = useState("");
+  const [profileMessage, setProfileMessage] = useState("");
   const [showOld, setShowOld] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
-    fetchProfile();
+    const stored = localStorage.getItem("doctorInfo");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      setDoctorInfo(parsed);
+      setProfileData({
+        qualifications: parsed.qualifications || "",
+        availableDays: parsed.availableDays || "",
+        startTime: parsed.startTime || "",
+        endTime: parsed.endTime || "",
+        consultationFee: parsed.consultationFee || "",
+      });
+    }
   }, []);
 
-  const fetchProfile = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/doctors/${doctorInfo.id}`);
-      if (res.ok) {
-        setProfile(await res.json());
-      } else {
-        // If endpoint doesn't exist, use stored info
-        setProfile(doctorInfo);
-      }
-    } catch (e) {
-      setProfile(doctorInfo);
+  const apiFetch = async (url, options = {}) => {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No authentication token found");
+
+    const headers = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+      ...options.headers,
+    };
+
+    const response = await fetch(url, { ...options, headers });
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "Unknown error");
+      throw new Error(`API error ${response.status}: ${errorText}`);
     }
+    return response.json();
   };
 
   const handleChangePassword = async (e) => {
@@ -53,256 +75,212 @@ const DoctorProfile = ({ doctorInfo }) => {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/doctors/change-password`, {
+      await apiFetch(`${API_BASE_URL}/doctors/change-password`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: doctorInfo.id,
           oldPassword: passData.oldPassword,
           newPassword: passData.newPassword,
         }),
       });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        alert("Password Changed Successfully");
-        setPassData({ oldPassword: "", newPassword: "", confirmPassword: "" });
-        setMessage("");
-      } else {
-        setMessage(data.error || "Failed to change password");
-      }
-    } catch (e) {
-      setMessage("Error changing password");
+      alert("Password Changed Successfully");
+      setPassData({ oldPassword: "", newPassword: "", confirmPassword: "" });
+      setMessage("");
+    } catch (err) {
+      setMessage(err.message || "Error changing password");
     }
   };
 
-  if (!profile) return <div className="loading-state"><p>Loading profile...</p></div>;
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    setProfileMessage("");
+
+    const payload = {
+      id: doctorInfo.id,
+      qualifications: profileData.qualifications,
+      availableDays: profileData.availableDays,
+      startTime: profileData.startTime,
+      endTime: profileData.endTime,
+      consultationFee: Number(profileData.consultationFee) || doctorInfo.consultationFee,
+    };
+
+    try {
+      await apiFetch(`${API_BASE_URL}/doctors/${doctorInfo.id}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      const updatedInfo = { ...doctorInfo, ...payload };
+      localStorage.setItem("doctorInfo", JSON.stringify(updatedInfo));
+      setDoctorInfo(updatedInfo);
+
+      alert("Profile Updated Successfully");
+      setProfileMessage("Profile updated successfully!");
+    } catch (err) {
+      setProfileMessage(err.message || "Failed to update profile");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  if (!doctorInfo) {
+    return <div className="loading-state"><p>Loading profile...</p></div>;
+  }
 
   return (
     <div className="profile-page">
-      <h2 style={{ marginBottom: "20px", color: "#1e293b" }}>My Profile</h2>
+      <h2 className="profile-title">My Profile</h2>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-        {/* Personal Info Card */}
-        <div className="profile-card" style={{
-          background: "white",
-          padding: "25px",
-          borderRadius: "12px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.08)"
-        }}>
-          <h3 style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px", color: "#10b981" }}>
+      <div className="profile-grid">
+        <div className="profile-card">
+          <h3 className="card-header">
             <FaUser /> Personal Details
           </h3>
 
-          <div style={{ display: "grid", gap: "15px" }}>
-            <div>
-              <label style={{ fontSize: "0.85rem", color: "#64748b", display: "block", marginBottom: "5px" }}>Full Name</label>
+          <form onSubmit={handleUpdateProfile}>
+            <div className="form-group">
+              <label>Full Name</label>
               <input
                 type="text"
-                value={profile.name || ""}
+                value={doctorInfo.name || ""}
                 disabled
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  background: "#f1f5f9",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "6px",
-                  color: "#334155"
-                }}
+                className="disabled-input"
               />
             </div>
 
-            <div>
-              <label style={{ fontSize: "0.85rem", color: "#64748b", display: "block", marginBottom: "5px" }}>Email</label>
+            <div className="form-group">
+              <label>Email</label>
               <input
                 type="email"
-                value={profile.email || doctorInfo.email || ""}
+                value={doctorInfo.email || ""}
                 disabled
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  background: "#f1f5f9",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "6px",
-                  color: "#334155"
-                }}
+                className="disabled-input"
               />
             </div>
 
-            <div>
-              <label style={{ fontSize: "0.85rem", color: "#64748b", display: "block", marginBottom: "5px" }}>
-                <FaGraduationCap style={{ marginRight: "5px" }} /> Qualifications
+            <div className="form-group">
+              <label>
+                <FaGraduationCap /> Qualifications
               </label>
               <input
                 type="text"
-                value={profile.qualifications || "N/A"}
-                disabled
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  background: "#f1f5f9",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "6px",
-                  color: "#334155"
-                }}
+                value={profileData.qualifications}
+                onChange={(e) => setProfileData({ ...profileData, qualifications: e.target.value })}
+                placeholder="e.g. MBBS, MD Cardiology"
               />
             </div>
 
-            <div>
-              <label style={{ fontSize: "0.85rem", color: "#64748b", display: "block", marginBottom: "5px" }}>
-                <FaCalendarAlt style={{ marginRight: "5px" }} /> Available Days
+            <div className="form-group">
+              <label>
+                <FaCalendarAlt /> Available Days
               </label>
               <input
                 type="text"
-                value={profile.availableDays || "N/A"}
-                disabled
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  background: "#f1f5f9",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "6px",
-                  color: "#334155"
-                }}
+                value={profileData.availableDays}
+                onChange={(e) => setProfileData({ ...profileData, availableDays: e.target.value })}
+                placeholder="e.g. Mon,Tue,Wed,Thu,Fri"
               />
             </div>
 
-            <div>
-              <label style={{ fontSize: "0.85rem", color: "#64748b", display: "block", marginBottom: "5px" }}>
-                <FaClock style={{ marginRight: "5px" }} /> Working Hours
+            <div className="form-group">
+              <label>
+                <FaClock /> Working Hours
               </label>
+              <div className="time-range">
+                <input
+                  type="time"
+                  value={profileData.startTime}
+                  onChange={(e) => setProfileData({ ...profileData, startTime: e.target.value })}
+                />
+                <span>to</span>
+                <input
+                  type="time"
+                  value={profileData.endTime}
+                  onChange={(e) => setProfileData({ ...profileData, endTime: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Consultation Fee (Rs.)</label>
               <input
-                type="text"
-                value={profile.startTime && profile.endTime ? `${profile.startTime} - ${profile.endTime}` : "N/A"}
-                disabled
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  background: "#f1f5f9",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "6px",
-                  color: "#334155"
-                }}
+                type="number"
+                value={profileData.consultationFee}
+                onChange={(e) => setProfileData({ ...profileData, consultationFee: e.target.value })}
               />
             </div>
 
-            <div>
-              <label style={{ fontSize: "0.85rem", color: "#64748b", display: "block", marginBottom: "5px" }}>Consultation Fee</label>
-              <input
-                type="text"
-                value={profile.consultationFee ? `Rs. ${profile.consultationFee}` : "N/A"}
-                disabled
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  background: "#f1f5f9",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "6px",
-                  color: "#334155"
-                }}
-              />
-            </div>
-          </div>
+            {profileMessage && (
+              <p className={profileMessage.includes("Success") ? "success-message" : "error-message"}>
+                {profileMessage}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={savingProfile}
+              className={`save-btn ${savingProfile ? "saving" : ""}`}
+            >
+              {savingProfile ? "Saving..." : "Save Profile"}
+            </button>
+          </form>
         </div>
 
-        {/* Change Password Card */}
-        <div className="profile-card" style={{
-          background: "white",
-          padding: "25px",
-          borderRadius: "12px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.08)"
-        }}>
-          <h3 style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px", color: "#10b981" }}>
+        <div className="profile-card">
+          <h3 className="card-header">
             <FaLock /> Change Password
           </h3>
 
           <form onSubmit={handleChangePassword}>
-            <div style={{ marginBottom: "15px", position: "relative" }}>
-              <label style={{ fontSize: "0.85rem", color: "#64748b", display: "block", marginBottom: "5px" }}>Current Password</label>
-              <input
-                type={showOld ? "text" : "password"}
-                value={passData.oldPassword}
-                onChange={(e) => setPassData({ ...passData, oldPassword: e.target.value })}
-                required
-                style={{
-                  width: "100%",
-                  padding: "10px 40px 10px 12px",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "6px"
-                }}
-              />
-              <span
-                onClick={() => setShowOld(!showOld)}
-                style={{ position: "absolute", right: "12px", top: "35px", cursor: "pointer", color: "#94a3b8" }}
-              >
-                {showOld ? <FaEyeSlash /> : <FaEye />}
-              </span>
+            <div className="form-group password-group">
+              <label>Current Password</label>
+              <div className="password-wrapper">
+                <input
+                  type={showOld ? "text" : "password"}
+                  value={passData.oldPassword}
+                  onChange={(e) => setPassData({ ...passData, oldPassword: e.target.value })}
+                  required
+                />
+                <span onClick={() => setShowOld(!showOld)}>
+                  {showOld ? <FaEyeSlash /> : <FaEye />}
+                </span>
+              </div>
             </div>
 
-            <div style={{ marginBottom: "15px", position: "relative" }}>
-              <label style={{ fontSize: "0.85rem", color: "#64748b", display: "block", marginBottom: "5px" }}>New Password</label>
-              <input
-                type={showNew ? "text" : "password"}
-                value={passData.newPassword}
-                onChange={(e) => setPassData({ ...passData, newPassword: e.target.value })}
-                required
-                style={{
-                  width: "100%",
-                  padding: "10px 40px 10px 12px",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "6px"
-                }}
-              />
-              <span
-                onClick={() => setShowNew(!showNew)}
-                style={{ position: "absolute", right: "12px", top: "35px", cursor: "pointer", color: "#94a3b8" }}
-              >
-                {showNew ? <FaEyeSlash /> : <FaEye />}
-              </span>
+            <div className="form-group password-group">
+              <label>New Password</label>
+              <div className="password-wrapper">
+                <input
+                  type={showNew ? "text" : "password"}
+                  value={passData.newPassword}
+                  onChange={(e) => setPassData({ ...passData, newPassword: e.target.value })}
+                  required
+                />
+                <span onClick={() => setShowNew(!showNew)}>
+                  {showNew ? <FaEyeSlash /> : <FaEye />}
+                </span>
+              </div>
             </div>
 
-            <div style={{ marginBottom: "15px", position: "relative" }}>
-              <label style={{ fontSize: "0.85rem", color: "#64748b", display: "block", marginBottom: "5px" }}>Confirm Password</label>
-              <input
-                type={showConfirm ? "text" : "password"}
-                value={passData.confirmPassword}
-                onChange={(e) => setPassData({ ...passData, confirmPassword: e.target.value })}
-                required
-                style={{
-                  width: "100%",
-                  padding: "10px 40px 10px 12px",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "6px"
-                }}
-              />
-              <span
-                onClick={() => setShowConfirm(!showConfirm)}
-                style={{ position: "absolute", right: "12px", top: "35px", cursor: "pointer", color: "#94a3b8" }}
-              >
-                {showConfirm ? <FaEyeSlash /> : <FaEye />}
-              </span>
+            <div className="form-group password-group">
+              <label>Confirm Password</label>
+              <div className="password-wrapper">
+                <input
+                  type={showConfirm ? "text" : "password"}
+                  value={passData.confirmPassword}
+                  onChange={(e) => setPassData({ ...passData, confirmPassword: e.target.value })}
+                  required
+                />
+                <span onClick={() => setShowConfirm(!showConfirm)}>
+                  {showConfirm ? <FaEyeSlash /> : <FaEye />}
+                </span>
+              </div>
             </div>
 
-            {message && <p style={{ color: "#ef4444", marginBottom: "10px", fontSize: "0.9rem" }}>{message}</p>}
+            {message && <p className="error-message">{message}</p>}
 
-            <button
-              type="submit"
-              style={{
-                width: "100%",
-                padding: "12px",
-                background: "linear-gradient(135deg, #10b981, #059669)",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontWeight: "600",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px"
-              }}
-            >
+            <button type="submit" className="change-password-btn">
               <FaLock /> Change Password
             </button>
           </form>

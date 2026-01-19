@@ -1,16 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { FaUserMd, FaMapMarkerAlt, FaPhone } from "react-icons/fa";
 import PatientNavbar from "../../components/PatientNavbar";
 import PatientFooter from "../../components/PatientFooter";
-import { FaUserMd, FaMapMarkerAlt } from "react-icons/fa";
 import "../../styles/Appointment.css";
 
 const API_BASE_URL = "http://localhost:8080/api";
 
 const PatientBookAppointment = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("appointment"); // Default to specialist for patient
+
+  const storedPatientInfo = JSON.parse(localStorage.getItem("patientInfo") || "{}");
+  const patientDisplayName = 
+    storedPatientInfo.fullName || 
+    storedPatientInfo.name || 
+    storedPatientInfo.full_name || 
+    "Patient";
+
+  const [activeTab, setActiveTab] = useState("appointment");
   const [patientData, setPatientData] = useState({
     id: null,
     name: "",
@@ -35,6 +43,8 @@ const PatientBookAppointment = () => {
   const [timeSlots, setTimeSlots] = useState([]);
   const [doctorFee, setDoctorFee] = useState(0);
   const opdFee = 500;
+
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     const phone = localStorage.getItem("patientPhone");
@@ -78,11 +88,14 @@ const PatientBookAppointment = () => {
       })
       .then((data) => {
         setDepartments(data);
-        console.log("Departments loaded:", data); // Debug: check if departments are fetched
       })
       .catch((err) => {
         console.error("Failed to load departments:", err);
       });
+
+    setNotifications([
+      { id: 'info-1', type: 'info', title: 'Booking Tips', message: 'Select symptoms clearly for better consultation', icon: FaUserMd }
+    ]);
   }, [navigate]);
 
   const handleDepartmentChange = (e) => {
@@ -101,7 +114,6 @@ const PatientBookAppointment = () => {
         .then((data) => {
           if (Array.isArray(data)) {
             setDoctors(data);
-            console.log("Doctors loaded for dept:", deptId, data); // Debug
           } else {
             setDoctors([]);
           }
@@ -193,18 +205,7 @@ const PatientBookAppointment = () => {
       tokenNumber: activeTab === "opd" ? `OPD-${Date.now().toString().slice(-6)}` : `APT-${Date.now().toString().slice(-6)}`,
     };
 
-
-    console.log("DEBUG - Payload being sent to Payment page:", {
-      selectedDeptId: appointmentDetails.departmentId,
-      selectedDocId: appointmentDetails.doctorId,
-      foundDepartment: departments.find((d) => d.id === Number(appointmentDetails.departmentId))?.name,
-      foundDoctor: doctors.find((d) => d.id === Number(appointmentDetails.doctorId))?.name,
-      payloadDepartment: payload.department,
-      payloadDoctorName: payload.doctorName,
-      fullPayload: payload,
-    });
-
-    navigate("/payment", { state: { paymentDetails: payload } });
+    navigate("/patient/payment", { state: { paymentDetails: payload } });
   };
 
   const tomorrowDate = () => {
@@ -214,8 +215,13 @@ const PatientBookAppointment = () => {
   };
 
   return (
-    <>
-      <PatientNavbar patientName={patientData.name || "Patient"} notificationCount={0} />
+    <div className="patient-module">
+      <PatientNavbar 
+        patientInfo={{ name: patientDisplayName }}
+        notifications={notifications}
+        onNotificationsUpdate={setNotifications}
+        notificationCount={notifications.length}
+      />
 
       <main className="appointment-page patient-container">
         <h1 className="page-title">Book OPD or Appointment</h1>
@@ -366,8 +372,18 @@ const PatientBookAppointment = () => {
         </form>
       </main>
 
+      <motion.button 
+        className="emergency-button"
+        whileHover={{ scale: 1.12 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => window.location.href = 'tel:1134'}
+        aria-label="Emergency Call 1134"
+      >
+        <FaPhone />
+      </motion.button>
+
       <PatientFooter />
-    </>
+    </div>
   );
 };
 

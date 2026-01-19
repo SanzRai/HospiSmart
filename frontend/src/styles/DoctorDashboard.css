@@ -1,301 +1,192 @@
-:root {
-  --primary: #1976D2;           /* Professional blue from patient ref */
-  --primary-dark: #1e3a8a;
-  --primary-light: #3b82f6;
-  --accent: #64B5F6;             /* Lighter blue */
-  --action: #FF7043;             /* Orange for buttons/actions */
-  --sidebar-bg: #0f172a;         /* Dark navy sidebar */
-  --sidebar-text: #e2e8f0;
-  --sidebar-active: #64B5F6;
-  --bg-main: #f8fafc;
-  --card-bg: #ffffff;
-  --text-dark: #0f172a;
-  --text-muted: #64748b;
-  --border-light: #e2e8f0;
-  --shadow-sm: 0 4px 12px rgba(0,0,0,0.06);
-  --shadow-md: 0 10px 30px rgba(15,23,42,0.08);
-  --transition: all 0.25s ease;
-  --font-base: 1.05rem;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-.staff-dashboard {
+.admin-layout {
   display: flex;
   min-height: 100vh;
-  background: var(--bg-main);
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-  font-size: var(--font-base);
+  background-color: #f9fafb;
+  position: relative;
 }
 
-.staff-dashboard.sidebar-closed .staff-main {
-  margin-left: 0 !important;
-}
-
-/* ── SIDEBAR ──────────────────────────────────────────────── */
-.staff-sidebar {
-  width: 280px;
-  min-width: 280px;
-  background: var(--sidebar-bg);
-  color: var(--sidebar-text);
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background: linear-gradient(90deg, #64b5f6, #1976d2);
+  background-size: 200% 200%;
+  animation: gradientFlow 15s ease infinite;
+  color: white;
   display: flex;
   flex-direction: column;
-  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
-  position: fixed;
-  height: 100vh;
-  z-index: 900;
-  box-shadow: 4px 0 25px rgba(0,0,0,0.18);
+  box-shadow: 2px 0 15px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+  z-index: 1000;
+  transition: width 0.35s ease-in-out;
 }
 
-.staff-sidebar.closed {
-  transform: translateX(-100%);
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .sidebar-header {
-  padding: 1.8rem 1.6rem;
+  padding: 1.5rem 1.25rem;
   display: flex;
   align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
 }
 
-.logo-small {
-  height: 42px;
-  width: auto;
+.sidebar-header:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.sidebar-header span {
-  font-size: 1.45rem;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  color: white;
-}
-
-.staff-profile {
-  padding: 1.6rem 1.4rem;
+.logo-container {
   display: flex;
   align-items: center;
   gap: 14px;
-  cursor: pointer;
-  transition: var(--transition);
-  border-radius: 12px;
-  margin: 0.6rem 1rem;
 }
 
-.staff-profile:hover {
-  background: rgba(255,255,255,0.07);
-}
-
-.profile-avatar {
-  width: 54px;
-  height: 54px;
-  background: linear-gradient(135deg, #3b82f6, #1e40af);
-  border-radius: 50%;
+.logo-wrapper {
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
-  color: white;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(59,130,246,0.35);
 }
 
-.profile-info h4 {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
+.logo {
+  height: 50px;
+  margin-left: 1px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
+}
+
+.hospital-name {
+  font-size: 1.6rem;
+  margin-left: 0.1px;
+  font-weight: 700;
   color: white;
+  white-space: nowrap;
 }
 
-.role-badge {
-  font-size: 0.78rem;
-  color: #94a3b5;
-  background: rgba(255,255,255,0.08);
-  padding: 3px 10px;
-  border-radius: 12px;
-  margin-top: 4px;
-  display: inline-block;
+.toggle-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .sidebar-nav {
-  margin-top: 1.5rem;
+  padding: 1.5rem 0.8rem;
   flex: 1;
+  overflow-y: auto;
 }
 
-.nav-item {
+.nav-link {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 1rem 1.4rem;
-  margin: 0.35rem 1rem;
+  padding: 0.9rem 1.2rem;
+  margin: 0.3rem 0;
   border-radius: 10px;
-  color: #cbd5e1;
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition);
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-size: 0.98rem;
+  transition: all 0.3s ease;
 }
 
-.nav-item:hover {
-  background: rgba(255,255,255,0.06);
-  color: white;
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateX(6px);
 }
 
-.nav-item.active {
-  background: var(--accent);
+.nav-link.active {
+  background: rgba(255, 255, 255, 0.22);
+  border-left: 4px solid #64b5f6;
+  padding-left: 1.3rem;
   color: white;
   font-weight: 600;
-  box-shadow: 0 6px 20px rgba(100,181,246,0.35);
 }
 
-.nav-item svg {
-  font-size: 1.35rem;
-  opacity: 0.9;
+.nav-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
 }
 
-.nav-item.active svg {
-  opacity: 1;
-}
-
-.sidebar-footer {
-  padding: 1.4rem 1rem;
-  border-top: 1px solid rgba(255,255,255,0.08);
-  margin-top: auto;
+.nav-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .logout-btn {
+  margin: 1.25rem 0rem 1rem;
+  padding: 1rem 1.3rem;
+  background-color: #ff7043;
+  color: white;
+  border: none;
+  border-radius: 10px;
   width: 100%;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
-  padding: 1rem 1.2rem;
-  background: rgba(239,68,68,0.12);
-  color: #fca5a5;
-  border: none;
-  border-radius: 10px;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(255, 112, 67, 0.35);
 }
 
 .logout-btn:hover {
-  background: rgba(239,68,68,0.22);
-  color: #f87171;
+  background-color: #ff5722;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 87, 34, 0.45);
 }
 
-/* ── MAIN CONTENT ─────────────────────────────────────────── */
-.staff-main {
-  flex: 1;
-  margin-left: 280px;
-  background: var(--bg-main);
-  display: flex;
-  flex-direction: column;
+.main-content {
+  margin-left: 260px;
+  padding: 2rem;
+  overflow-y: auto;
   min-height: 100vh;
-  transition: margin-left 0.35s ease;
+  background-color: #f9fafb;
+  transition: margin-left 0.35s ease-in-out;
 }
 
-.staff-topbar {
-  background: white;
-  padding: 1.1rem 2.2rem;
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  border-bottom: 1px solid var(--border-light);
-  box-shadow: var(--shadow-sm);
-  position: sticky;
-  top: 0;
-  z-index: 800;
-  background: white;
+.sidebar.collapsed {
+  width: 72px;
 }
 
-.toggle-sidebar {
-  background: none;
-  border: none;
-  font-size: 1.6rem;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  transition: var(--transition);
+.sidebar.collapsed + .main-content {
+  margin-left: 72px;
 }
 
-.toggle-sidebar:hover {
-  background: #f1f5f9;
-  color: var(--primary);
-}
-
-.topbar-title h1 {
-  font-size: 1.65rem;
-  font-weight: 700;
-  color: var(--text-dark);
-  margin: 0;
-}
-
-.current-time {
-  font-size: 0.95rem;
-  color: var(--text-muted);
-  margin-left: auto;
-  text-align: right;
-}
-
-.current-time .time {
-  font-weight: 600;
-  color: var(--primary);
-  margin-left: 10px;
-  font-size: 1.1rem;
-}
-
-/* ── MODULE CONTAINER ─────────────────────────────────────── */
-.module-container {
-  padding: 2rem 2.5rem;
-  flex: 1;
-}
-
-/* ── RESPONSIVE ───────────────────────────────────────────── */
 @media (max-width: 1024px) {
-  .staff-sidebar {
-    width: 260px;
-    min-width: 260px;
+  .sidebar {
+    width: 72px;
   }
-  
-  .staff-main {
-    margin-left: 260px;
-  }
-}
 
-@media (max-width: 768px) {
-  .staff-sidebar {
-    width: 100%;
-    transform: translateX(-100%);
+  .sidebar.collapsed {
+    width: 72px;
   }
-  
-  .staff-sidebar.open {
-    transform: translateX(0);
-  }
-  
-  .staff-main {
-    margin-left: 0;
-  }
-  
-  .module-container {
-    padding: 1.5rem 1.2rem;
-  }
-  
-  .topbar-title h1 {
-    font-size: 1.45rem;
-  }
-}
 
-/* Loading */
-.loading-screen {
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
-  color: var(--text-muted);
-  background: var(--bg-main);
+  .main-content {
+    margin-left: 72px;
+  }
+
+  .hospital-name,
+  .nav-text {
+    display: none;
+  }
 }

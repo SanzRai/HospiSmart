@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { FaUserMd, FaHospital, FaUsers, FaCalendarCheck, FaSpinner } from "react-icons/fa";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import "../../styles/AdminHome.css";
 
 const API_BASE_URL = "http://localhost:8080/api";
 
 const AdminHome = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,96 +41,106 @@ const AdminHome = () => {
     }
   };
 
+  const statCards = [
+    {
+      title: "Departments",
+      value: stats?.totalDepartments || 0,
+      icon: <FaHospital />,
+      color: "#1976d2",
+      path: "/admin-dashboard/departments",
+    },
+    {
+      title: "Doctors",
+      value: stats?.totalDoctors || 0,
+      icon: <FaUserMd />,
+      color: "#059669",
+      path: "/admin-dashboard/doctors",
+    },
+    {
+      title: "Patients",
+      value: stats?.totalPatients || 0,
+      icon: <FaUsers />,
+      color: "#7c3aed",
+      path: "/admin-dashboard/patients",
+    },
+    {
+      title: "Appointments (This Month)",
+      value: stats?.monthlyAppointments || 0,
+      icon: <FaCalendarCheck />,
+      color: "#ea580c",
+      path: "/admin-dashboard/appointments",
+    },
+  ];
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <FaSpinner className="animate-spin text-4xl text-blue-600" />
-        <span className="ml-3 text-lg">Loading dashboard...</span>
+      <div className="loading-state">
+        <FaSpinner className="spinner" />
+        <span>Loading dashboard data...</span>
       </div>
     );
   }
 
   if (error) {
-    return <div className="text-red-600 text-center p-5">{error}</div>;
+    return <div className="error-message">{error}</div>;
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold mb-5">Admin Dashboard</h1>
+    <div className="admin-home">
+      <h1 className="dashboard-title">Admin Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white p-5 shadow rounded-xl border-l-4 border-blue-500"
-        >
-          <FaHospital className="text-blue-600 text-3xl mb-2" />
-          <h3 className="text-2xl font-bold">{stats?.totalDepartments || 0}</h3>
-          <p className="text-gray-500">Departments</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white p-5 shadow rounded-xl border-l-4 border-green-500"
-        >
-          <FaUserMd className="text-green-600 text-3xl mb-2" />
-          <h3 className="text-2xl font-bold">{stats?.totalDoctors || 0}</h3>
-          <p className="text-gray-500">Doctors</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white p-5 shadow rounded-xl border-l-4 border-purple-500"
-        >
-          <FaUsers className="text-purple-600 text-3xl mb-2" />
-          <h3 className="text-2xl font-bold">{stats?.totalPatients || 0}</h3>
-          <p className="text-gray-500">Patients</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white p-5 shadow rounded-xl border-l-4 border-orange-500"
-        >
-          <FaCalendarCheck className="text-orange-600 text-3xl mb-2" />
-          <h3 className="text-2xl font-bold">{stats?.monthlyAppointments || 0}</h3>
-          <p className="text-gray-500">Appointments (This Month)</p>
-        </motion.div>
+      <div className="stats-grid">
+        {statCards.map((card, index) => (
+          <motion.div
+            key={card.title}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="stat-card"
+            style={{ "--card-color": card.color }}
+            onClick={() => navigate(card.path)}
+          >
+            <div className="card-icon">{card.icon}</div>
+            <h3>{card.value}</h3>
+            <p>{card.title}</p>
+          </motion.div>
+        ))}
       </div>
 
-     
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="bg-white shadow rounded-xl p-5"
+        className="chart-card"
       >
-        <h2 className="text-xl font-semibold mb-4">Appointment Trend (Last 6 Months)</h2>
+        <h2 className="chart-title">Appointment Trend (Last 6 Months)</h2>
         {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
+          <ResponsiveContainer width="100%" height={340}>
+            <LineChart data={chartData} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="month" stroke="#475569" />
+              <YAxis stroke="#475569" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "rgba(255,255,255,0.98)",
+                  borderRadius: "12px",
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                }}
+                labelStyle={{ color: "#1e293b", fontWeight: "600" }}
+              />
               <Line
                 type="monotone"
                 dataKey="count"
-                stroke="#1a5fb4"
-                strokeWidth={3}
-                dot={{ fill: "#1a5fb4" }}
-                activeDot={{ r: 8 }}
+                stroke="#1e40af"
+                strokeWidth={3.5}
+                dot={{ fill: "#1e40af", strokeWidth: 2, r: 5 }}
+                activeDot={{ r: 9, strokeWidth: 3 }}
               />
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <p className="text-center text-gray-500">No appointment data available.</p>
+          <p className="no-data">No appointment data available yet.</p>
         )}
       </motion.div>
     </div>

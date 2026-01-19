@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FaSearch,
   FaUserPlus,
@@ -19,10 +18,13 @@ import {
   FaClock,
   FaMoneyBillWave,
 } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
+import "../../styles/ReceptionModule.css";
 
 const API_BASE_URL = "http://localhost:8080/api";
 
-const ReceptionModule = ({ staffInfo }) => {
+const ReceptionModule = () => {
+  const [staffInfo, setStaffInfo] = useState(null);
   const [activeTab, setActiveTab] = useState("search");
   const [searchPhone, setSearchPhone] = useState("");
   const [searchResult, setSearchResult] = useState(null);
@@ -52,20 +54,26 @@ const ReceptionModule = ({ staffInfo }) => {
   const [departments, setDepartments] = useState([]);
   const [rosterDoctors, setRosterDoctors] = useState([]);
   const [recentTickets, setRecentTickets] = useState([]);
-  const [onlineBookings, setOnlineBookings] = useState({ opd: [], appointments: [] }); // NEW
+  const [onlineBookings, setOnlineBookings] = useState({ opd: [], appointments: [] });
 
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [generatedTicket, setGeneratedTicket] = useState(null);
   const [followUpInfo, setFollowUpInfo] = useState(null);
 
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [toast, setToast] = useState(null);
+  const [registerErrors, setRegisterErrors] = useState({});
+  const [ticketErrors, setTicketErrors] = useState({});
+
+  useEffect(() => {
+    const stored = localStorage.getItem("staffInfo");
+    if (stored) setStaffInfo(JSON.parse(stored));
+  }, []);
 
   useEffect(() => {
     fetchDepartments();
     fetchRecentTickets();
     fetchRoster();
-    fetchOnlineBookings(); // NEW
+    fetchOnlineBookings();
 
     const interval = setInterval(() => {
       fetchRecentTickets();
@@ -75,55 +83,65 @@ const ReceptionModule = ({ staffInfo }) => {
     return () => clearInterval(interval);
   }, []);
 
+  const apiFetch = async (url, options = {}) => {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No token");
+
+    const headers = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+      ...options.headers,
+    };
+
+    const res = await fetch(url, { ...options, headers });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "Unknown error");
+      throw new Error(`API error ${res.status}: ${text}`);
+    }
+    return res.json();
+  };
+
   const fetchDepartments = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/departments`);
-      if (res.ok) setDepartments(await res.json());
-    } catch (err) {
-      console.error("Error fetching departments:", err);
-    }
+      const data = await apiFetch(`${API_BASE_URL}/departments`);
+      setDepartments(data);
+    } catch {}
   };
 
   const fetchRoster = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/doctors`);
-      if (res.ok) setRosterDoctors(await res.json());
-    } catch (err) {
-      console.error("Error fetching roster:", err);
-    }
+      const data = await apiFetch(`${API_BASE_URL}/doctors`);
+      setRosterDoctors(data);
+    } catch {}
   };
 
   const fetchRecentTickets = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/opd/recent`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("staffToken")}` },
-      });
-      if (res.ok) setRecentTickets(await res.json());
-    } catch (err) {
-      console.error("Error fetching tickets:", err);
-    }
+      const data = await apiFetch(`${API_BASE_URL}/opd/recent`);
+      setRecentTickets(data);
+    } catch {}
   };
 
-  // NEW: Fetch patient online bookings
   const fetchOnlineBookings = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/bookings/online-recent`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("staffToken")}` },
+      const data = await apiFetch(`${API_BASE_URL}/bookings/online-recent`);
+      setOnlineBookings({
+        opd: data.opd || [],
+        appointments: data.appointments || [],
       });
-      if (res.ok) {
-        const data = await res.json();
-        setOnlineBookings({
-          opd: data.opd || [],
-          appointments: data.appointments || [],
-        });
-      }
-    } catch (err) {
-      console.error("Error fetching online bookings:", err);
-    }
+    } catch {}
+  };
+
+  const showToast = (type, message) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 5000);
   };
 
   const handleSearchPatient = async () => {
-    if (!searchPhone.trim()) return;
+    if (!searchPhone.trim()) {
+      setSearchError("Please enter phone number");
+      return;
+    }
     setLoading(true);
     setSearchError("");
     setSearchResult(null);
@@ -131,79 +149,78 @@ const ReceptionModule = ({ staffInfo }) => {
     setFollowUpInfo(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/patients/search?phone=${searchPhone}`);
-      if (res.ok) {
-        const patient = await res.json();
-        setSearchResult(patient);
+      const patient = await apiFetch(`${API_BASE_URL}/patients/search?phone=${searchPhone}`);
+      setSearchResult(patient);
 
-        const ticketRes = await fetch(`${API_BASE_URL}/opd/pre-registered?phone=${searchPhone}`);
-        if (ticketRes.ok) {
-          const ticket = await ticketRes.json();
-          if (ticket) setPreRegisteredTicket(ticket);
-        }
+      try {
+        const ticket = await apiFetch(`${API_BASE_URL}/opd/pre-registered?phone=${searchPhone}`);
+        if (ticket) setPreRegisteredTicket(ticket);
+      } catch {}
 
-        const followRes = await fetch(`${API_BASE_URL}/opd/check-followup/${patient.id}`);
-        if (followRes.ok) {
-          const data = await followRes.json();
-          if (data.eligible) setFollowUpInfo(data);
-        }
-      } else {
-        setSearchError("Patient not found. Please register new patient.");
-      }
-    } catch (err) {
-      setSearchError("Error searching patient. Check connection.");
+      try {
+        const followData = await apiFetch(`${API_BASE_URL}/opd/check-followup/${patient.id}`);
+        if (followData.eligible) setFollowUpInfo(followData);
+      } catch {}
+    } catch {
+      setSearchError("Patient not found. Register new patient?");
     } finally {
       setLoading(false);
     }
+  };
+
+  const validateRegistration = () => {
+    const errs = {};
+    if (!newPatient.fullName.trim()) errs.fullName = "Full name is required";
+    if (!newPatient.phoneNumber.trim()) errs.phoneNumber = "Phone number is required";
+    if (!newPatient.dateOfBirth) errs.dateOfBirth = "Date of birth is required";
+    if (!newPatient.gender) errs.gender = "Gender is required";
+    setRegisterErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleRegisterPatient = async (e) => {
     e.preventDefault();
+    if (!validateRegistration()) return;
+
     setLoading(true);
-    setErrorMessage("");
-    setSuccessMessage("");
 
     try {
-      const res = await fetch(`${API_BASE_URL}/patients/register`, {
+      const patient = await apiFetch(`${API_BASE_URL}/patients/register`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newPatient),
       });
-
-      if (res.ok) {
-        const patient = await res.json();
-        setSearchResult(patient);
-        setActiveTab("ticket");
-        setOpdForm({
-          patientId: patient.id,
-          patientName: patient.fullName,
-          symptoms: "",
-          departmentId: "",
-          isFollowUp: false,
-          ticketId: null,
-        });
-        setSuccessMessage("Patient registered successfully! Now issue OPD ticket.");
-      } else {
-        setErrorMessage("Registration failed.");
-      }
+      setSearchResult(patient);
+      setActiveTab("ticket");
+      setOpdForm({
+        patientId: patient.id,
+        patientName: patient.fullName,
+        symptoms: "",
+        departmentId: "",
+        isFollowUp: false,
+        ticketId: null,
+      });
+      showToast("success", "Patient registered successfully! Now issue OPD ticket.");
+      setRegisterErrors({});
     } catch (err) {
-      setErrorMessage("Network error.");
+      showToast("error", err.message || "Registration failed");
     } finally {
       setLoading(false);
     }
   };
 
+  const validateTicket = () => {
+    const errs = {};
+    if (!opdForm.departmentId) errs.departmentId = "Department is required";
+    if (!opdForm.symptoms.trim()) errs.symptoms = "Symptoms are required";
+    setTicketErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
   const handleGenerateTicket = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setErrorMessage("");
-    setSuccessMessage("");
+    if (!validateTicket()) return;
 
-    if (!opdForm.departmentId) {
-      setErrorMessage("Please select a department.");
-      setLoading(false);
-      return;
-    }
+    setLoading(true);
 
     const payload = {
       patientId: opdForm.patientId,
@@ -216,57 +233,36 @@ const ReceptionModule = ({ staffInfo }) => {
     };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/opd/generate-ticket`, {
+      const ticket = await apiFetch(`${API_BASE_URL}/opd/generate-ticket`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("staffToken")}`,
-        },
         body: JSON.stringify(payload),
       });
-
-      if (res.ok) {
-        const ticket = await res.json();
-        setGeneratedTicket(ticket);
-        setShowTicketModal(true);
-        fetchRecentTickets();
-        fetchOnlineBookings(); // Refresh online list too
-        setSuccessMessage(`OPD Ticket ${ticket.tokenNumber} issued successfully!`);
-        resetForm();
-      } else {
-        const err = await res.json();
-        setErrorMessage(err.error || "Failed to issue ticket.");
-      }
+      setGeneratedTicket(ticket);
+      setShowTicketModal(true);
+      fetchRecentTickets();
+      fetchOnlineBookings();
+      showToast("success", `OPD Ticket ${ticket.tokenNumber} issued successfully!`);
+      resetForm();
     } catch (err) {
-      setErrorMessage("Network error.");
+      showToast("error", err.message || "Failed to issue ticket");
     } finally {
       setLoading(false);
     }
   };
 
-  // NEW: Mark online booking as paid at counter
   const handleMarkOnlinePaid = async (bookingId) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/bookings/online/${bookingId}/pay-counter`, {
+      await apiFetch(`${API_BASE_URL}/bookings/online/${bookingId}/pay-counter`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("staffToken")}`,
-        },
         body: JSON.stringify({ paidBy: staffInfo?.name }),
       });
-      if (res.ok) {
-        setSuccessMessage("Payment confirmed at counter.");
-        fetchOnlineBookings();
-      } else {
-        setErrorMessage("Failed to update payment.");
-      }
+      showToast("success", "Payment confirmed at counter.");
+      fetchOnlineBookings();
     } catch (err) {
-      setErrorMessage("Network error.");
+      showToast("error", err.message || "Failed to update payment");
     }
   };
 
-  // NEW: Load online OPD pre-registration into ticket form
   const handleIssueOnlineOpdTicket = (booking) => {
     setSearchResult({
       id: booking.patientId || null,
@@ -282,7 +278,7 @@ const ReceptionModule = ({ staffInfo }) => {
       ticketId: booking.id,
     });
     setActiveTab("ticket");
-    setSuccessMessage("Online pre-registered patient loaded. Now issue ticket.");
+    showToast("success", "Online pre-registered patient loaded. Now issue ticket.");
   };
 
   const resetForm = () => {
@@ -297,6 +293,7 @@ const ReceptionModule = ({ staffInfo }) => {
     setSearchResult(null);
     setPreRegisteredTicket(null);
     setFollowUpInfo(null);
+    setTicketErrors({});
   };
 
   const selectPatientForTicket = () => {
@@ -314,47 +311,37 @@ const ReceptionModule = ({ staffInfo }) => {
   const toggleDoctorDuty = async (doctor) => {
     const updated = !doctor.isAvailable;
     try {
-      await fetch(`${API_BASE_URL}/doctors/${doctor.id}/status`, {
+      await apiFetch(`${API_BASE_URL}/doctors/${doctor.id}/status`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isAvailable: updated }),
       });
       fetchRoster();
-    } catch (err) {
-      setErrorMessage("Failed to update doctor status");
-    }
+    } catch {}
   };
 
   const handlePrintTicket = () => window.print();
 
-  useEffect(() => {
-    if (successMessage || errorMessage) {
-      const timer = setTimeout(() => {
-        setSuccessMessage("");
-        setErrorMessage("");
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage, errorMessage]);
+  if (!staffInfo) return <div>Loading staff information...</div>;
 
   return (
     <div className="reception-module">
-      <div className="module-header">
-        <h2><FaDesktop /> Front Office - Reception</h2>
-      </div>
-
       <AnimatePresence>
-        {successMessage && (
-          <motion.div className="alert success" initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-            <FaCheckCircle /> {successMessage}
-          </motion.div>
-        )}
-        {errorMessage && (
-          <motion.div className="alert error" initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-            <FaExclamationTriangle /> {errorMessage}
+        {toast && (
+          <motion.div
+            className={`toast ${toast.type}`}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            {toast.type === "success" ? <FaCheckCircle /> : <FaExclamationTriangle />}
+            <span>{toast.message}</span>
           </motion.div>
         )}
       </AnimatePresence>
+
+      <div className="module-header">
+        <h2><FaDesktop /> Front Office - Reception</h2>
+      </div>
 
       <div className="module-tabs">
         <button className={activeTab === "search" ? "active" : ""} onClick={() => setActiveTab("search")}>
@@ -377,7 +364,6 @@ const ReceptionModule = ({ staffInfo }) => {
         </button>
       </div>
 
-      {/* Search Tab */}
       {activeTab === "search" && (
         <motion.div className="tab-content" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <div className="search-section">
@@ -399,7 +385,7 @@ const ReceptionModule = ({ staffInfo }) => {
             {searchError && (
               <div className="search-error">
                 <FaExclamationTriangle /> {searchError}
-                <button onClick={() => setActiveTab("register")}>Register New Patient</button>
+                <button onClick={() => setActiveTab("register")}>Register New</button>
               </div>
             )}
 
@@ -418,7 +404,7 @@ const ReceptionModule = ({ staffInfo }) => {
                     <FaGlobe /> <strong>Online Pre-Registered OPD</strong>
                     <p>Symptoms: {preRegisteredTicket.symptoms || "Not provided"}</p>
                     {preRegisteredTicket.paymentStatus === "PENDING" && (
-                      <p style={{ color: "red", fontWeight: "bold" }}>Payment Pending</p>
+                      <p className="pending-payment">Payment Pending</p>
                     )}
                   </div>
                 )}
@@ -438,7 +424,6 @@ const ReceptionModule = ({ staffInfo }) => {
         </motion.div>
       )}
 
-      {/* Register New Patient Tab */}
       {activeTab === "register" && (
         <motion.div className="tab-content" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <form className="registration-form" onSubmit={handleRegisterPatient}>
@@ -446,91 +431,169 @@ const ReceptionModule = ({ staffInfo }) => {
             <div className="form-grid">
               <div className="form-group">
                 <label>Full Name *</label>
-                <input type="text" value={newPatient.fullName} onChange={(e) => setNewPatient({ ...newPatient, fullName: e.target.value })} required />
+                <input
+                  type="text"
+                  value={newPatient.fullName}
+                  onChange={(e) => {
+                    setNewPatient({ ...newPatient, fullName: e.target.value });
+                    setRegisterErrors((p) => ({ ...p, fullName: "" }));
+                  }}
+                />
+                {registerErrors.fullName && <div className="field-error">{registerErrors.fullName}</div>}
               </div>
+
               <div className="form-group">
                 <label>Phone Number *</label>
-                <input type="tel" value={newPatient.phoneNumber} onChange={(e) => setNewPatient({ ...newPatient, phoneNumber: e.target.value })} required />
+                <input
+                  type="tel"
+                  value={newPatient.phoneNumber}
+                  onChange={(e) => {
+                    setNewPatient({ ...newPatient, phoneNumber: e.target.value });
+                    setRegisterErrors((p) => ({ ...p, phoneNumber: "" }));
+                  }}
+                />
+                {registerErrors.phoneNumber && <div className="field-error">{registerErrors.phoneNumber}</div>}
               </div>
+
               <div className="form-group">
                 <label>Email</label>
-                <input type="email" value={newPatient.email} onChange={(e) => setNewPatient({ ...newPatient, email: e.target.value })} />
+                <input
+                  type="email"
+                  value={newPatient.email}
+                  onChange={(e) => setNewPatient({ ...newPatient, email: e.target.value })}
+                />
               </div>
+
               <div className="form-group">
                 <label>Date of Birth *</label>
-                <input type="date" value={newPatient.dateOfBirth} onChange={(e) => setNewPatient({ ...newPatient, dateOfBirth: e.target.value })} required />
+                <input
+                  type="date"
+                  value={newPatient.dateOfBirth}
+                  onChange={(e) => {
+                    setNewPatient({ ...newPatient, dateOfBirth: e.target.value });
+                    setRegisterErrors((p) => ({ ...p, dateOfBirth: "" }));
+                  }}
+                />
+                {registerErrors.dateOfBirth && <div className="field-error">{registerErrors.dateOfBirth}</div>}
               </div>
+
               <div className="form-group">
                 <label>Gender *</label>
-                <select value={newPatient.gender} onChange={(e) => setNewPatient({ ...newPatient, gender: e.target.value })} required>
+                <select
+                  value={newPatient.gender}
+                  onChange={(e) => {
+                    setNewPatient({ ...newPatient, gender: e.target.value });
+                    setRegisterErrors((p) => ({ ...p, gender: "" }));
+                  }}
+                >
                   <option value="">Select</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
                 </select>
+                {registerErrors.gender && <div className="field-error">{registerErrors.gender}</div>}
               </div>
+
               <div className="form-group">
                 <label>District</label>
-                <input type="text" value={newPatient.address.district} onChange={(e) => setNewPatient({ ...newPatient, address: { ...newPatient.address, district: e.target.value } })} />
+                <input
+                  type="text"
+                  value={newPatient.address.district}
+                  onChange={(e) =>
+                    setNewPatient({
+                      ...newPatient,
+                      address: { ...newPatient.address, district: e.target.value },
+                    })
+                  }
+                />
               </div>
+
               <div className="form-group">
                 <label>Municipality</label>
-                <input type="text" value={newPatient.address.municipality} onChange={(e) => setNewPatient({ ...newPatient, address: { ...newPatient.address, municipality: e.target.value } })} />
+                <input
+                  type="text"
+                  value={newPatient.address.municipality}
+                  onChange={(e) =>
+                    setNewPatient({
+                      ...newPatient,
+                      address: { ...newPatient.address, municipality: e.target.value },
+                    })
+                  }
+                />
               </div>
+
               <div className="form-group">
                 <label>Ward</label>
-                <input type="text" value={newPatient.address.ward} onChange={(e) => setNewPatient({ ...newPatient, address: { ...newPatient.address, ward: e.target.value } })} />
+                <input
+                  type="text"
+                  value={newPatient.address.ward}
+                  onChange={(e) =>
+                    setNewPatient({
+                      ...newPatient,
+                      address: { ...newPatient.address, ward: e.target.value },
+                    })
+                  }
+                />
               </div>
             </div>
-            <button type="submit" disabled={loading}>
+
+            <button type="submit" disabled={loading} className="primary-btn">
               {loading ? "Registering..." : "Register Patient"}
             </button>
           </form>
         </motion.div>
       )}
 
-      {/* Issue OPD Ticket Tab */}
       {activeTab === "ticket" && (
         <motion.div className="tab-content" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <form className="ticket-form" onSubmit={handleGenerateTicket}>
             <h3><FaTicketAlt /> Issue OPD Ticket</h3>
+
             {searchResult && (
               <div className="selected-patient">
                 <strong>Patient:</strong> {searchResult.fullName} (UHID: {searchResult.id})
-                {preRegisteredTicket && <span className="badge online">Online Pre-Registered</span>}
-                {followUpInfo?.eligible && <span className="badge followup">Follow-up (Free)</span>}
+                {preRegisteredTicket && <span className="badge online">Online</span>}
+                {followUpInfo?.eligible && <span className="badge followup">Follow-up</span>}
               </div>
             )}
 
             <div className="form-grid">
               <div className="form-group">
                 <label>Patient Name</label>
-                <input type="text" value={opdForm.patientName} readOnly style={{ backgroundColor: "#f0f0f0" }} />
+                <input type="text" value={opdForm.patientName} readOnly className="readonly-input" />
               </div>
 
               <div className="form-group">
                 <label>Department *</label>
                 <select
                   value={opdForm.departmentId}
-                  onChange={(e) => setOpdForm({ ...opdForm, departmentId: e.target.value })}
-                  required
+                  onChange={(e) => {
+                    setOpdForm({ ...opdForm, departmentId: e.target.value });
+                    setTicketErrors((p) => ({ ...p, departmentId: "" }));
+                  }}
                 >
                   <option value="">Select Department</option>
                   {departments.map((dept) => (
-                    <option key={dept.id} value={dept.id}>{dept.name}</option>
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
                   ))}
                 </select>
+                {ticketErrors.departmentId && <div className="field-error">{ticketErrors.departmentId}</div>}
               </div>
 
               <div className="form-group full-width">
                 <label>Symptoms / Chief Complaint *</label>
                 <textarea
                   value={opdForm.symptoms}
-                  onChange={(e) => setOpdForm({ ...opdForm, symptoms: e.target.value })}
+                  onChange={(e) => {
+                    setOpdForm({ ...opdForm, symptoms: e.target.value });
+                    setTicketErrors((p) => ({ ...p, symptoms: "" }));
+                  }}
                   placeholder="Describe symptoms..."
-                  required
                   rows={4}
                 />
+                {ticketErrors.symptoms && <div className="field-error">{ticketErrors.symptoms}</div>}
               </div>
 
               {followUpInfo?.eligible && (
@@ -547,14 +610,13 @@ const ReceptionModule = ({ staffInfo }) => {
               )}
             </div>
 
-            <button type="submit" disabled={loading}>
-              {loading ? "Issuing Ticket..." : "Issue OPD Ticket"}
+            <button type="submit" disabled={loading} className="primary-btn">
+              {loading ? "Issuing..." : "Issue OPD Ticket"}
             </button>
           </form>
         </motion.div>
       )}
 
-      {/* Doctor Roster Tab */}
       {activeTab === "roster" && (
         <motion.div className="tab-content" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <h3><FaUserMd /> Doctor Duty Roster</h3>
@@ -579,10 +641,9 @@ const ReceptionModule = ({ staffInfo }) => {
         </motion.div>
       )}
 
-      {/* Recent Tickets Tab (Issued by Receptionist) */}
       {activeTab === "history" && (
         <motion.div className="tab-content" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <h3><FaHistory /> Recently Issued Tickets (By Reception)</h3>
+          <h3><FaHistory /> Recently Issued Tickets</h3>
           <table className="tickets-table">
             <thead>
               <tr>
@@ -612,13 +673,11 @@ const ReceptionModule = ({ staffInfo }) => {
         </motion.div>
       )}
 
-      {/* NEW TAB: Online Bookings (By Patients) */}
       {activeTab === "online" && (
         <motion.div className="tab-content" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <h3><FaGlobe /> Patient Online Bookings</h3>
 
-          {/* OPD Pre-Registrations */}
-          <div className="booking-section" style={{ marginBottom: "30px" }}>
+          <div className="booking-section">
             <h4>Today's Online OPD Tickets</h4>
             {onlineBookings.opd.length === 0 ? (
               <p>No online OPD bookings today.</p>
@@ -648,7 +707,7 @@ const ReceptionModule = ({ staffInfo }) => {
                       </td>
                       <td>
                         {b.paymentStatus === "PENDING" && (
-                          <button onClick={() => handleMarkOnlinePaid(b.id)} className="pay-btn small" style={{ marginRight: "8px" }}>
+                          <button onClick={() => handleMarkOnlinePaid(b.id)} className="pay-btn small">
                             <FaMoneyBillWave /> Mark Paid
                           </button>
                         )}
@@ -663,7 +722,6 @@ const ReceptionModule = ({ staffInfo }) => {
             )}
           </div>
 
-          {/* Upcoming Appointments */}
           <div className="booking-section">
             <h4>Upcoming Appointments</h4>
             {onlineBookings.appointments.length === 0 ? (
@@ -714,7 +772,6 @@ const ReceptionModule = ({ staffInfo }) => {
         </motion.div>
       )}
 
-      {/* Print Ticket Modal */}
       <AnimatePresence>
         {showTicketModal && generatedTicket && (
           <motion.div className="modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaAmbulance, FaHelicopter } from 'react-icons/fa';
+import "../styles/PatientFooter.css";
 
 const PatientFooter = () => {
   return (
@@ -37,10 +38,10 @@ const PatientFooter = () => {
           <div className="patient-footer-section">
             <div className="patient-footer-emergency">
               <h4><FaAmbulance style={{ marginRight: 8 }} />Emergency</h4>
-              <a href="tel:1134">Ambulance: 1134</a>
+              <a href="tel:1134">Ambulance: 102</a>
               <p style={{ marginTop: 8, fontSize: 12 }}>
                 <FaHelicopter style={{ marginRight: 4 }} />
-                Heli Rescue: +977-9858 777111
+                Heli Rescue: +977-9858777111
               </p>
             </div>
           </div>

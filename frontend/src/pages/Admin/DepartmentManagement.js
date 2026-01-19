@@ -7,16 +7,16 @@ import {
   FaEye,
   FaDownload,
   FaSearch,
-  FaCheckCircle,
-  FaBan,
 } from "react-icons/fa";
 import * as XLSX from "xlsx";
+import "../../styles/AdminManagement.css";
 
 const API = "http://localhost:8080/api/admin/departments";
 
 const DepartmentManagement = () => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState(null); // { type: 'success'/'error', text: '...' }
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -34,18 +34,26 @@ const DepartmentManagement = () => {
 
   const loadDepartments = async () => {
     try {
-      const token = localStorage.getItem("adminToken");
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No authentication token found");
+
       const res = await fetch(`${API}?t=${Date.now()}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Cache-Control": "no-cache",
         },
       });
-      if (!res.ok) throw new Error("Failed");
+
+      if (!res.ok) {
+        if (res.status === 401) throw new Error("Session expired. Please login again.");
+        throw new Error("Failed to load departments");
+      }
+
       const data = await res.json();
       setDepartments(data);
+      setMessage(null);
     } catch (err) {
-      alert("Failed to load departments. Please login as admin.");
+      setMessage({ type: "error", text: err.message || "Failed to load data" });
     } finally {
       setLoading(false);
     }
@@ -53,13 +61,12 @@ const DepartmentManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("adminToken");
+    const token = localStorage.getItem("token");
     const url = editMode ? `${API}/${formData.id}` : API;
-    const method = editMode ? "PUT" : "POST";
 
     try {
       const res = await fetch(url, {
-        method,
+        method: editMode ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -67,33 +74,35 @@ const DepartmentManagement = () => {
         body: JSON.stringify(formData),
       });
 
-      if (res.ok) {
-        alert(`Department ${editMode ? "updated" : "added"} successfully!`);
-        setShowModal(false);
-        loadDepartments();
-      } else {
-        const err = await res.text();
-        alert(err || "Operation failed");
-      }
+      if (!res.ok) throw new Error("Operation failed");
+
+      setMessage({
+        type: "success",
+        text: `Department ${editMode ? "updated" : "added"} successfully!`,
+      });
+      setShowModal(false);
+      loadDepartments();
     } catch {
-      alert("Network error");
+      setMessage({ type: "error", text: "Something went wrong. Please try again." });
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this department permanently?")) return;
+    if (!window.confirm("Are you sure you want to delete this department permanently?")) return;
+
     try {
-      const token = localStorage.getItem("adminToken");
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API}/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) {
-        loadDepartments();
-        alert("Department deleted");
-      }
+
+      if (!res.ok) throw new Error();
+
+      setMessage({ type: "success", text: "Department deleted successfully" });
+      loadDepartments();
     } catch {
-      alert("Delete failed");
+      setMessage({ type: "error", text: "Could not delete department" });
     }
   };
 
@@ -125,15 +134,14 @@ const DepartmentManagement = () => {
   };
 
   const filtered = departments.filter(d =>
-    d.name.toLowerCase().includes(search.toLowerCase()) ||
-    (d.description && d.description.toLowerCase().includes(search.toLowerCase()))
+    d.name?.toLowerCase().includes(search.toLowerCase()) ||
+    d.description?.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (loading) return <div className="loading">Loading departments...</div>;
+  if (loading) return <div className="loading-state">Loading departments...</div>;
 
   return (
     <div className="department-management">
-      {/* Header */}
       <div className="header-bar">
         <h1><FaHospital /> Department Management</h1>
         <button onClick={openCreateModal} className="add-btn">
@@ -141,12 +149,19 @@ const DepartmentManagement = () => {
         </button>
       </div>
 
-      {/* Stats */}
+      {message && (
+        <div className={`message-box ${message.type}`}>
+          {message.text}
+        </div>
+      )}
+
       <div className="stats-grid">
-        <div className="stat-card total"><strong>{departments.length}</strong> Total Departments</div>
+        <div className="stat-card total">
+          <strong>{departments.length}</strong>
+          <span>Total Departments</span>
+        </div>
       </div>
 
-      {/* Controls */}
       <div className="controls">
         <div className="search-box">
           <FaSearch />
@@ -161,7 +176,6 @@ const DepartmentManagement = () => {
         </button>
       </div>
 
-      {/* Table */}
       <div className="table-container">
         <table>
           <thead>
@@ -177,9 +191,27 @@ const DepartmentManagement = () => {
                 <td><strong>{dept.name}</strong></td>
                 <td>{dept.description || "—"}</td>
                 <td className="actions">
-                  <button onClick={() => setSelectedDept(dept)} className="view" title="View"><FaEye /></button>
-                  <button onClick={() => handleEdit(dept)} className="edit" title="Edit"><FaEdit /></button>
-                  <button onClick={() => handleDelete(dept.id)} className="delete-btn" title="Delete"><FaTrash /></button>
+                  <button
+                    onClick={() => setSelectedDept(dept)}
+                    className="action-btn view"
+                    title="View"
+                  >
+                    <FaEye />
+                  </button>
+                  <button
+                    onClick={() => handleEdit(dept)}
+                    className="action-btn edit"
+                    title="Edit"
+                  >
+                    <FaEdit />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(dept.id)}
+                    className="action-btn delete"
+                    title="Delete"
+                  >
+                    <FaTrash />
+                  </button>
                 </td>
               </tr>
             ))}
@@ -208,7 +240,7 @@ const DepartmentManagement = () => {
                 <label>Description</label>
                 <textarea
                   rows={5}
-                  placeholder="Brief description of the department (optional)"
+                  placeholder="Brief description (optional)"
                   value={formData.description}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
                 />
@@ -216,9 +248,9 @@ const DepartmentManagement = () => {
 
               <div className="form-actions">
                 <button type="submit" className="save-btn">
-                  {editMode ? "Update Department" : "Add Department"}
+                  {editMode ? "Update" : "Add"}
                 </button>
-                <button type="button" onClick={() => setShowModal(false)} className="cancel-btn">
+                <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
               </div>
@@ -227,16 +259,18 @@ const DepartmentManagement = () => {
         </div>
       )}
 
-      {/* View Details Modal */}
+      {/* Simple View Modal */}
       {selectedDept && (
         <div className="modal-overlay" onClick={() => setSelectedDept(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal simple-view" onClick={e => e.stopPropagation()}>
             <h2>{selectedDept.name}</h2>
-            <div className="modal-grid">
-              <div><strong>Description:</strong></div>
-              <div>{selectedDept.description || "No description provided"}</div>
+            <div className="modal-content">
+              <p><strong>Description:</strong></p>
+              <p>{selectedDept.description || "No description available."}</p>
             </div>
-            <button onClick={() => setSelectedDept(null)} className="close-btn">Close</button>
+            <button className="close-btn" onClick={() => setSelectedDept(null)}>
+              Close
+            </button>
           </div>
         </div>
       )}

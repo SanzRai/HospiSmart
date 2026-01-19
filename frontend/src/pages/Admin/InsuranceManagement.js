@@ -11,6 +11,7 @@ import {
   FaBan,
 } from "react-icons/fa";
 import * as XLSX from "xlsx";
+import "../../styles/AdminManagement.css";
 
 const API_BASE_URL = "http://localhost:8080/api";
 
@@ -28,6 +29,7 @@ const InsuranceManagement = () => {
   const [insurances, setInsurances] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState(null); 
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedInsurance, setSelectedInsurance] = useState(null);
@@ -45,19 +47,23 @@ const InsuranceManagement = () => {
 
   const fetchInsurances = async () => {
     try {
-      const token = localStorage.getItem("adminToken");
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found");
+
       const res = await fetch(`${API_BASE_URL}/admin/insurance`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Cache-Control": "no-cache",
         },
       });
-      if (res.ok) {
-        const data = await res.json();
-        setInsurances(data);
-      }
+
+      if (!res.ok) throw new Error("Failed to load insurance providers");
+
+      const data = await res.json();
+      setInsurances(data);
+      setMessage(null);
     } catch (err) {
-      alert("Failed to load insurance providers. Please login as admin.");
+      setMessage({ type: "error", text: err.message || "Failed to load data" });
     } finally {
       setLoading(false);
     }
@@ -65,8 +71,7 @@ const InsuranceManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    const token = localStorage.getItem("adminToken");
+    const token = localStorage.getItem("token");
     const url = editMode
       ? `${API_BASE_URL}/admin/insurance/${currentInsurance.id}`
       : `${API_BASE_URL}/admin/insurance`;
@@ -81,18 +86,16 @@ const InsuranceManagement = () => {
         body: JSON.stringify(currentInsurance),
       });
 
-      if (res.ok) {
-        alert(`Insurance provider ${editMode ? "updated" : "added"} successfully!`);
-        fetchInsurances();
-        setShowModal(false);
-      } else {
-        const err = await res.text();
-        alert(err || "Failed to save");
-      }
+      if (!res.ok) throw new Error("Failed to save");
+
+      setMessage({
+        type: "success",
+        text: `Insurance provider ${editMode ? "updated" : "added"} successfully!`,
+      });
+      fetchInsurances();
+      setShowModal(false);
     } catch {
-      alert("Network error");
-    } finally {
-      setLoading(false);
+      setMessage({ type: "error", text: "Something went wrong. Please try again." });
     }
   };
 
@@ -108,27 +111,31 @@ const InsuranceManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this insurance provider permanently?")) return;
-    const token = localStorage.getItem("adminToken");
+    if (!window.confirm("Are you sure you want to delete this insurance provider permanently?")) return;
+
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE_URL}/admin/insurance/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) {
-        fetchInsurances();
-        alert("Deleted successfully");
-      }
+
+      if (!res.ok) throw new Error();
+
+      setMessage({ type: "success", text: "Insurance provider deleted successfully" });
+      fetchInsurances();
     } catch {
-      alert("Delete failed");
+      setMessage({ type: "error", text: "Could not delete provider" });
     }
   };
 
   const toggleStatus = async (id, current) => {
-    if (!window.confirm(`Really ${current ? "DEACTIVATE" : "ACTIVATE"} this provider?`)) return;
-    const token = localStorage.getItem("adminToken");
+    const action = current ? "DEACTIVATE" : "ACTIVATE";
+    if (!window.confirm(`Really ${action} this provider?`)) return;
+
     try {
-      await fetch(`${API_BASE_URL}/admin/insurance/${id}/status`, {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/admin/insurance/${id}/status`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -136,9 +143,13 @@ const InsuranceManagement = () => {
         },
         body: JSON.stringify({ isActive: !current }),
       });
+
+      if (!res.ok) throw new Error();
+
+      setMessage({ type: "success", text: `Provider ${action}d successfully` });
       fetchInsurances();
     } catch {
-      alert("Failed to update status");
+      setMessage({ type: "error", text: "Failed to update status" });
     }
   };
 
@@ -147,7 +158,7 @@ const InsuranceManagement = () => {
     if (value === "" || (num >= 0 && num <= 100)) {
       setCurrentInsurance(prev => ({
         ...prev,
-        coverage: { ...prev.coverage, [service]: num }
+        coverage: { ...prev.coverage, [service]: num },
       }));
     }
   };
@@ -171,26 +182,45 @@ const InsuranceManagement = () => {
     ins.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (loading) return <div className="loading">Loading insurance providers...</div>;
+  if (loading) return <div className="loading-state">Loading insurance providers...</div>;
 
   return (
     <div className="insurance-management">
-      {/* Header */}
       <div className="header-bar">
         <h1><FaShieldAlt /> Insurance Provider Management</h1>
-        <button onClick={() => { setEditMode(false); setCurrentInsurance({ id: null, name: "", isActive: true, coverage: {} }); setShowModal(true); }} className="add-btn">
+        <button
+          onClick={() => {
+            setEditMode(false);
+            setCurrentInsurance({ id: null, name: "", isActive: true, coverage: {} });
+            setShowModal(true);
+          }}
+          className="add-btn"
+        >
           <FaPlus /> Add Provider
         </button>
       </div>
 
-      {/* Stats */}
+      {message && (
+        <div className={`message-box ${message.type}`}>
+          {message.text}
+        </div>
+      )}
+
       <div className="stats-grid">
-        <div className="stat-card total"><strong>{insurances.length}</strong> Total Providers</div>
-        <div className="stat-card active"><strong>{insurances.filter(i => i.isActive).length}</strong> Active</div>
-        <div className="stat-card inactive"><strong>{insurances.filter(i => !i.isActive).length}</strong> Inactive</div>
+        <div className="stat-card total">
+          <strong>{insurances.length}</strong>
+          <span>Total Providers</span>
+        </div>
+        <div className="stat-card active">
+          <strong>{insurances.filter(i => i.isActive).length}</strong>
+          <span>Active</span>
+        </div>
+        <div className="stat-card inactive">
+          <strong>{insurances.filter(i => !i.isActive).length}</strong>
+          <span>Inactive</span>
+        </div>
       </div>
 
-      {/* Controls */}
       <div className="controls">
         <div className="search-box">
           <FaSearch />
@@ -205,7 +235,6 @@ const InsuranceManagement = () => {
         </button>
       </div>
 
-      {/* Table */}
       <div className="table-container">
         <table>
           <thead>
@@ -236,12 +265,22 @@ const InsuranceManagement = () => {
                   </span>
                 </td>
                 <td className="actions">
-                  <button onClick={() => setSelectedInsurance(ins)} className="view" title="View"><FaEye /></button>
-                  <button onClick={() => handleEdit(ins)} className="edit" title="Edit"><FaEdit /></button>
-                  <button onClick={() => toggleStatus(ins.id, ins.isActive)} className="toggle">
+                  <button onClick={() => setSelectedInsurance(ins)} className="action-btn view" title="View">
+                    <FaEye />
+                  </button>
+                  <button onClick={() => handleEdit(ins)} className="action-btn edit" title="Edit">
+                    <FaEdit />
+                  </button>
+                  <button
+                    onClick={() => toggleStatus(ins.id, ins.isActive)}
+                    className={`action-btn toggle ${ins.isActive ? "deactivate" : "activate"}`}
+                    title={ins.isActive ? "Deactivate" : "Activate"}
+                  >
                     {ins.isActive ? <FaBan /> : <FaCheckCircle />}
                   </button>
-                  <button onClick={() => handleDelete(ins.id)} className="delete-btn"><FaTrash /></button>
+                  <button onClick={() => handleDelete(ins.id)} className="action-btn delete" title="Delete">
+                    <FaTrash />
+                  </button>
                 </td>
               </tr>
             ))}
@@ -293,14 +332,14 @@ const InsuranceManagement = () => {
                   checked={currentInsurance.isActive}
                   onChange={e => setCurrentInsurance({ ...currentInsurance, isActive: e.target.checked })}
                 />
-                <span> Active (Visible to patients & staff)</span>
+                <span>Active (Visible to patients & staff)</span>
               </label>
 
               <div className="form-actions">
-                <button type="submit" className="save-btn" disabled={loading}>
-                  {loading ? "Saving..." : editMode ? "Update Provider" : "Add Provider"}
+                <button type="submit" className="save-btn">
+                  {editMode ? "Update Provider" : "Add Provider"}
                 </button>
-                <button type="button" onClick={() => setShowModal(false)} className="cancel-btn">
+                <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
               </div>
@@ -309,25 +348,34 @@ const InsuranceManagement = () => {
         </div>
       )}
 
-      {/* View Details Modal */}
+      {/* Simple View Modal */}
       {selectedInsurance && (
         <div className="modal-overlay" onClick={() => setSelectedInsurance(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal simple-view" onClick={e => e.stopPropagation()}>
             <h2>{selectedInsurance.name}</h2>
-            <div className="modal-grid">
-              <div><strong>Status:</strong> <span className={selectedInsurance.isActive ? "active" : "inactive"}>{selectedInsurance.isActive ? "Active" : "Inactive"}</span></div>
-              <div><strong>Coverage Details:</strong></div>
+            <div className="modal-content">
+              <p>
+                <strong>Status:</strong>{" "}
+                <span className={selectedInsurance.isActive ? "status-active" : "status-inactive"}>
+                  {selectedInsurance.isActive ? "Active" : "Inactive"}
+                </span>
+              </p>
+              <p><strong>Coverage Details:</strong></p>
               {SERVICE_TYPES.map(srv => {
                 const pct = selectedInsurance.coverage?.[srv.key] || 0;
                 return pct > 0 ? (
-                  <div key={srv.key}>• {srv.label}: <strong>{pct}%</strong> covered</div>
+                  <div key={srv.key} className="coverage-item">
+                    {srv.label}: <strong>{pct}%</strong>
+                  </div>
                 ) : null;
               })}
               {Object.values(selectedInsurance.coverage || {}).every(v => v === 0) && (
-                <div>• No services covered</div>
+                <p className="no-coverage">No services covered</p>
               )}
             </div>
-            <button onClick={() => setSelectedInsurance(null)} className="close-btn">Close</button>
+            <button className="close-btn" onClick={() => setSelectedInsurance(null)}>
+              Close
+            </button>
           </div>
         </div>
       )}

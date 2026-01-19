@@ -1,0 +1,165 @@
+/* PATIENT FOOTER - Clean, Modern & Professional */
+
+.patient-footer {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 60px 10% 5px;
+  font-family: 'Roboto', sans-serif;
+}
+
+.patient-footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.patient-footer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+}
+
+.patient-footer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.patient-footer-section h4 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--secondary-color);
+  width: fit-content;
+  color: white;
+}
+
+.patient-footer-section a,
+.patient-footer-section p {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  transition: color 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.patient-footer-section a:hover,
+.patient-footer-section p:hover {
+  color: var(--button-action);
+}
+
+.patient-footer-emergency {
+  background: rgba(231, 76, 60, 0.18);
+  border: 1px solid rgba(231, 76, 60, 0.4);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.patient-footer-emergency h4 {
+  margin: 0 0 12px 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  font-size: 1.3rem;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.patient-footer-emergency a {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+  display: block;
+  margin: 8px 0;
+}
+
+.patient-footer-emergency a:hover {
+  color: var(--button-action);
+  text-decoration: underline;
+}
+
+.patient-footer-emergency p {
+  font-size: 0.95rem;
+  margin: 8px 0 0;
+  justify-content: center;
+}
+
+.patient-footer-bottom {
+  margin-top: 50px;
+  padding-top: 30px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  text-align: center;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.patient-footer-bottom p {
+  margin: 6px 0;
+}
+
+.patient-footer-bottom a {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 14px;
+  text-decoration: none;
+}
+
+.patient-footer-bottom a:hover {
+  color: var(--button-action);
+  text-decoration: underline;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   RESPONSIVE DESIGN
+   ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .patient-footer {
+    padding: 50px 6%;
+  }
+
+  .patient-footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 35px;
+  }
+}
+
+@media (max-width: 768px) {
+  .patient-footer {
+    padding: 45px 5%;
+  }
+
+  .patient-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    text-align: center;
+  }
+
+  .patient-footer-section {
+    align-items: center;
+  }
+
+  .patient-footer-section h4 {
+    width: auto;
+  }
+
+  .patient-footer-emergency {
+    max-width: 380px;
+  }
+}
+
+@media (max-width: 480px) {
+  .patient-footer {
+    padding: 40px 5%;
+  }
+
+  .patient-footer-bottom {
+    font-size: 0.9rem;
+  }
+}

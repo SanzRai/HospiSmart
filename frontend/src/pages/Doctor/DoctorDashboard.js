@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { FaBars, FaTimes, FaUserMd, FaSignOutAlt, FaStethoscope } from "react-icons/fa";
 import { motion } from "framer-motion";
-import {
-  FaUserMd, FaStethoscope, FaSignOutAlt, FaBars, FaTimes, FaHospital
-} from "react-icons/fa";
-import DoctorModule from "./DoctorModule";
-import DoctorProfile from "./DoctorProfile";
 import "../../styles/DoctorDashboard.css";
 
 const DoctorDashboard = () => {
   const navigate = useNavigate();
-  const [doctorInfo, setDoctorInfo] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [doctorInfo, setDoctorInfo] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -36,65 +32,69 @@ const DoctorDashboard = () => {
     navigate("/login");
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const menuItems = [
+    { path: "", icon: <FaStethoscope />, label: "Consultation" },
+    { path: "profile", icon: <FaUserMd />, label: "My Profile" },
+  ];
+
   if (!doctorInfo) {
     return <div className="loading-screen">Loading...</div>;
   }
 
   return (
-    <div className={`staff-dashboard ${sidebarOpen ? '' : 'sidebar-closed'}`}>
-      <aside className={`staff-sidebar ${sidebarOpen ? "open" : "closed"}`}>
-        <div className="sidebar-header">
-          <img src="/logo.png" alt="HospiSmart Logo" className="logo-small" />
-          <span>HospiSmart</span>
-        </div>
-
-        <div className="staff-profile" onClick={() => navigate("/doctor/profile")}>
-          <div className="profile-avatar"><FaUserMd /></div>
-          {sidebarOpen && (
-            <div className="profile-info">
-              <h4>{doctorInfo.name}</h4>
-              <span className="role-badge">Doctor</span>
+    <div className="admin-layout">
+      <motion.aside
+        animate={{ width: sidebarOpen ? 260 : 72 }}
+        transition={{ duration: 0.35, ease: "easeInOut" }}
+        className={`sidebar ${sidebarOpen ? "" : "collapsed"}`}
+      >
+        <div className="sidebar-header" onClick={toggleSidebar}>
+          <div className="logo-container">
+            <div className="logo-wrapper">
+              <img src="/logo.png" alt="HospiSmart logo" className="logo" />
             </div>
-          )}
+            {sidebarOpen && <span className="hospital-name">HospiSmart</span>}
+          </div>
+
+          <button
+            className="toggle-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleSidebar();
+            }}
+          >
+            {sidebarOpen ? <FaTimes /> : <FaBars />}
+          </button>
         </div>
 
         <nav className="sidebar-nav">
-          <div
-            className={`nav-item ${window.location.pathname === "/doctor/dashboard" ? "active" : ""}`}
-            onClick={() => navigate("/doctor/dashboard")}
-          >
-            <FaStethoscope />
-            {sidebarOpen && <span>Consultation</span>}
-          </div>
+          {menuItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              end={item.path === ""}
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              <span className="nav-icon">{item.icon}</span>
+              {sidebarOpen && <span className="nav-text">{item.label}</span>}
+            </NavLink>
+          ))}
         </nav>
 
-        <div className="sidebar-footer">
-          <button className="logout-btn" onClick={handleLogout}>
-            <FaSignOutAlt />
-            {sidebarOpen && <span>Logout</span>}
-          </button>
-        </div>
-      </aside>
+        <button onClick={handleLogout} className="logout-btn">
+          <FaSignOutAlt />
+          {sidebarOpen && <span>Logout</span>}
+        </button>
+      </motion.aside>
 
-      <main className="staff-main">
-        <header className="staff-topbar">
-          <button className="toggle-sidebar" onClick={() => setSidebarOpen(!sidebarOpen)}>
-            {sidebarOpen ? <FaTimes /> : <FaBars />}
-          </button>
-          <div className="topbar-title">
-            <h1>{window.location.pathname.includes("/profile") ? "My Profile" : "Doctor Dashboard"}</h1>
-          </div>
-          <div className="topbar-info">
-            <div className="current-time">
-              {new Date().toLocaleDateString("en-NP", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-              <span className="time">{new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</span>
-            </div>
-          </div>
-        </header>
-
-        <motion.div className="module-container" key={window.location.pathname}>
-          <Outlet />
-        </motion.div>
+      <main className="main-content">
+        <Outlet />
       </main>
     </div>
   );

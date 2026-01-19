@@ -23,18 +23,17 @@ const Payment = () => {
   const fee = details ? Number(details.consultingFee) || 0 : 0;
   const isOpd = details?.bookingType === "OPD";
 
-  // Determine if discounts are allowed (only NOT for OPD and APPOINTMENT)
   const discountsAllowed = details?.bookingType && 
     !["OPD", "APPOINTMENT"].includes(details.bookingType.toUpperCase());
 
   const [paymentType, setPaymentType] = useState("SELF");
   const [paymentMethod, setPaymentMethod] = useState("");
   
-  // These are kept but will always be 0 for OPD/Appointment
+
   const [coveredAmount, setCoveredAmount] = useState(0);
   const [payableAmount, setPayableAmount] = useState(fee);
 
-  // --- Removed/unused states for discounts when not allowed ---
+
   const [ssfNumber, setSsfNumber] = useState("");
   const [ssfResult, setSsfResult] = useState(null);
   const [checkingSsf, setCheckingSsf] = useState(false);
@@ -56,7 +55,6 @@ const Payment = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [receiptId, setReceiptId] = useState("");
 
-  // Always full amount for OPD/Appointment (no discount logic runs)
   useEffect(() => {
     if (!discountsAllowed) {
       setCoveredAmount(0);
@@ -65,7 +63,7 @@ const Payment = () => {
     }
   }, [fee, discountsAllowed]);
 
-  // Clear any previous discount data when switching to non-discountable booking
+ 
   useEffect(() => {
     if (!discountsAllowed) {
       setSsfResult(null);
@@ -75,9 +73,6 @@ const Payment = () => {
     }
   }, [discountsAllowed]);
 
-  // === SSF, Insurance, Staff logic completely skipped if !discountsAllowed ===
-
-  // (You can keep the old useEffects, but they will be no-ops due to early returns)
 
   const clearStaffVerification = () => {
     setVerifiedStaff(null);
@@ -113,9 +108,8 @@ const Payment = () => {
       consultingFee: fee,
       coveredAmount,
       payableAmount,
-      paymentType, // Will always be "SELF" for OPD/Appointment
+      paymentType,
       paymentMethod,
-      // All discount fields are null when not allowed
       ssfNumber: discountsAllowed && paymentType === "SSF" ? ssfNumber : null,
       insuranceProvider: null,
       insurancePolicyNumber: null,

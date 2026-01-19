@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaFlask,
   FaVial,
@@ -8,10 +8,10 @@ import {
   FaCheckCircle,
   FaTimesCircle,
   FaFileAlt,
-  FaPrint,
   FaUserMd,
   FaBarcode,
 } from "react-icons/fa";
+import "../../styles/LabModule.css";
 
 const API_BASE_URL = "http://localhost:8080/api";
 
@@ -20,9 +20,10 @@ const LabModule = ({ staffInfo }) => {
   const [pendingSamples, setPendingSamples] = useState([]);
   const [entryQueue, setEntryQueue] = useState([]);
   const [verificationQueue, setVerificationQueue] = useState([]);
-  const [testResults, setTestResults] = useState({});
+  const [testResults, setTestResults] = useState({}); // { sampleId: { paramName: value } }
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     fetchPendingSamples();
@@ -30,14 +31,17 @@ const LabModule = ({ staffInfo }) => {
     fetchVerificationQueue();
   }, []);
 
+  const showToast = (type, message) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 4800);
+  };
+
   const fetchPendingSamples = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/lab/samples/pending`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("staffToken")}` },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-      if (res.ok) {
-        setPendingSamples(await res.json());
-      }
+      if (res.ok) setPendingSamples(await res.json());
     } catch (err) {
       console.error("Error fetching pending samples:", err);
     }
@@ -46,11 +50,9 @@ const LabModule = ({ staffInfo }) => {
   const fetchEntryQueue = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/lab/results/pending-entry`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("staffToken")}` },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-      if (res.ok) {
-        setEntryQueue(await res.json());
-      }
+      if (res.ok) setEntryQueue(await res.json());
     } catch (err) {
       console.error("Error fetching entry queue:", err);
     }
@@ -59,13 +61,23 @@ const LabModule = ({ staffInfo }) => {
   const fetchVerificationQueue = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/lab/results/pending-verification`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("staffToken")}` },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       if (res.ok) {
-        setVerificationQueue(await res.json());
+        const data = await res.json();
+        const normalized = data.map(sample => ({
+          ...sample,
+          results: Array.isArray(sample.results)
+            ? sample.results
+            : sample.results
+            ? [sample.results]
+            : []
+        }));
+        setVerificationQueue(normalized);
       }
     } catch (err) {
       console.error("Error fetching verification queue:", err);
+      showToast("error", "Failed to fetch verification queue");
     }
   };
 
@@ -76,7 +88,7 @@ const LabModule = ({ staffInfo }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("staffToken")}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
           collectedBy: staffInfo?.name,
@@ -85,51 +97,71 @@ const LabModule = ({ staffInfo }) => {
       });
 
       if (res.ok) {
-        alert("Sample collected successfully");
+        showToast("success", "Sample collected successfully");
         fetchPendingSamples();
         fetchEntryQueue();
+      } else {
+        showToast("error", "Failed to collect sample");
       }
     } catch (err) {
-      console.error("Error collecting sample:", err);
+      showToast("error", "Network error while collecting sample");
     } finally {
       setLoading(false);
     }
   };
 
   const handleResultEntry = (sampleId, paramName, value) => {
-    setTestResults({
-      ...testResults,
+    setTestResults((prev) => ({
+      ...prev,
       [sampleId]: {
-        ...testResults[sampleId],
+        ...prev[sampleId],
         [paramName]: value,
       },
-    });
+    }));
   };
 
   const handleSubmitResults = async (sample) => {
     setLoading(true);
     const results = testResults[sample.id] || {};
 
+    if (Object.keys(results).length === 0) {
+      showToast("error", "Please enter at least one test result");
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch(`${API_BASE_URL}/lab/results/${sample.id}/submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("staffToken")}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
-          results, // Map<String, String> of parameter name -> value
+          results: Object.entries(results).map(([name, value]) => ({
+            name,
+            value,
+            unit: sample.parameters?.find(p => p.name === name)?.unit || "",
+            normalRange: sample.parameters?.find(p => p.name === name)?.normalRange || ""
+          })),
           enteredBy: staffInfo?.name,
         }),
       });
 
       if (res.ok) {
-        alert("Results submitted for verification");
+        showToast("success", "Results submitted for verification");
+        setTestResults((prev) => {
+          const updated = { ...prev };
+          delete updated[sample.id];
+          return updated;
+        });
         fetchEntryQueue();
         fetchVerificationQueue();
+      } else {
+        showToast("error", "Failed to submit results");
       }
     } catch (err) {
-      console.error("Error submitting results:", err);
+      showToast("error", "Network error while submitting results");
     } finally {
       setLoading(false);
     }
@@ -142,7 +174,7 @@ const LabModule = ({ staffInfo }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("staffToken")}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
           approved,
@@ -151,38 +183,55 @@ const LabModule = ({ staffInfo }) => {
       });
 
       if (res.ok) {
-        alert(approved ? "Results verified and released" : "Results sent back for correction");
+        showToast(
+          "success",
+          approved ? "Results verified and released" : "Results sent back for correction"
+        );
         fetchVerificationQueue();
-        if (!approved) fetchEntryQueue(); // If rejected, it goes back to entry
+        if (!approved) fetchEntryQueue();
+      } else {
+        showToast("error", "Failed to process verification");
       }
     } catch (err) {
-      console.error("Error verifying results:", err);
+      showToast("error", "Network error during verification");
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper to check abnormal values (Backend usually handles flagging, but frontend visual is good)
   const isValueAbnormal = (value, normalRange) => {
     if (!value || !normalRange) return false;
-    // Simple check assuming range format "min-max"
     try {
-        const [min, max] = normalRange.split("-").map(parseFloat);
-        const numValue = parseFloat(value);
-        return !isNaN(numValue) && (numValue < min || numValue > max);
-    } catch(e) {
-        return false;
+      const [min, max] = normalRange.split("-").map(parseFloat);
+      const numValue = parseFloat(value);
+      return !isNaN(numValue) && (numValue < min || numValue > max);
+    } catch {
+      return false;
     }
   };
 
   const filteredSamples = pendingSamples.filter(
     (s) =>
-      s.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.receiptNumber.toLowerCase().includes(searchQuery.toLowerCase())
+      s.patientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.receiptNumber?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="lab-module">
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            className={`toast ${toast.type}`}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            {toast.type === "success" ? <FaCheckCircle /> : <FaTimesCircle />}
+            <span>{toast.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="module-header">
         <h2>
           <FaFlask /> Laboratory
@@ -225,11 +274,7 @@ const LabModule = ({ staffInfo }) => {
       </div>
 
       {activeTab === "pending" && (
-        <motion.div
-          className="tab-content"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
+        <motion.div className="tab-content" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <div className="search-bar">
             <FaSearch />
             <input
@@ -270,6 +315,7 @@ const LabModule = ({ staffInfo }) => {
                 </button>
               </div>
             ))}
+
             {filteredSamples.length === 0 && (
               <div className="empty-state">
                 <FaVial size={48} />
@@ -281,11 +327,7 @@ const LabModule = ({ staffInfo }) => {
       )}
 
       {activeTab === "entry" && (
-        <motion.div
-          className="tab-content"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
+        <motion.div className="tab-content" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <h3>Enter Test Results</h3>
 
           <div className="entry-list">
@@ -310,7 +352,7 @@ const LabModule = ({ staffInfo }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {sample.parameters && sample.parameters.map((param, idx) => (
+                      {sample.parameters?.map((param, idx) => (
                         <tr key={idx}>
                           <td>{param.name}</td>
                           <td>
@@ -350,6 +392,7 @@ const LabModule = ({ staffInfo }) => {
                 </div>
               </div>
             ))}
+
             {entryQueue.length === 0 && (
               <div className="empty-state">
                 <FaFileAlt size={48} />
@@ -361,11 +404,7 @@ const LabModule = ({ staffInfo }) => {
       )}
 
       {activeTab === "verify" && (
-        <motion.div
-          className="tab-content"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
+        <motion.div className="tab-content" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <h3><FaUserMd /> Pathologist Verification</h3>
 
           <div className="verification-list">
@@ -375,7 +414,7 @@ const LabModule = ({ staffInfo }) => {
                   <div>
                     <h4>{sample.testName}</h4>
                     <p>{sample.receiptNumber} | {sample.patientName}</p>
-                    <small>Entered by: {sample.enteredBy}</small>
+                    <small>Entered by: {sample.enteredBy || "N/A"}</small>
                   </div>
                 </div>
 
@@ -391,22 +430,30 @@ const LabModule = ({ staffInfo }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {sample.results && sample.results.map((res, idx) => (
-                        <tr
-                          key={idx}
-                          className={isValueAbnormal(res.value, res.normalRange) ? "abnormal-row" : ""}
-                        >
-                          <td>{res.name}</td>
-                          <td><strong>{res.value}</strong></td>
-                          <td>{res.unit}</td>
-                          <td>{res.normalRange}</td>
-                          <td>
-                            {isValueAbnormal(res.value, res.normalRange) && (
-                              <span className="abnormal-badge">High/Low</span>
-                            )}
+                      {sample.results?.length > 0 ? (
+                        sample.results.map((res, idx) => (
+                          <tr
+                            key={idx}
+                            className={isValueAbnormal(res.value, res.normalRange) ? "abnormal-row" : ""}
+                          >
+                            <td>{res.name}</td>
+                            <td><strong>{res.value || "—"}</strong></td>
+                            <td>{res.unit || "—"}</td>
+                            <td>{res.normalRange || "—"}</td>
+                            <td>
+                              {isValueAbnormal(res.value, res.normalRange) && (
+                                <span className="abnormal-badge">Abnormal</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="5" style={{ textAlign: "center", color: "#666" }}>
+                            No results entered yet
                           </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -415,20 +462,21 @@ const LabModule = ({ staffInfo }) => {
                   <button
                     className="reject-btn"
                     onClick={() => handleVerifyResults(sample, false)}
-                    disabled={loading}
+                    disabled={loading || sample.results?.length === 0}
                   >
                     <FaTimesCircle /> Reject
                   </button>
                   <button
                     className="approve-btn"
                     onClick={() => handleVerifyResults(sample, true)}
-                    disabled={loading}
+                    disabled={loading || sample.results?.length === 0}
                   >
                     <FaCheckCircle /> Verify & Release
                   </button>
                 </div>
               </div>
             ))}
+
             {verificationQueue.length === 0 && (
               <div className="empty-state">
                 <FaClipboardCheck size={48} />

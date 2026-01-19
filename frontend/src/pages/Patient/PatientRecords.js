@@ -1,21 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FaPills, FaFlask, FaHistory, FaDownload, FaUserMd, FaExclamationCircle } from "react-icons/fa";
+import { FaPills, FaFlask, FaHistory, FaDownload, FaUserMd, FaExclamationCircle, FaPhone } from "react-icons/fa";
 import PatientNavbar from "../../components/PatientNavbar";
 import PatientFooter from "../../components/PatientFooter";
-import "../../styles/PatientModule.css";
+import "../../styles/PatientRecords.css";
 
 const API_BASE_URL = "http://localhost:8080/api";
 
 const PatientRecords = () => {
-  const navigate = useNavigate();
+  const storedPatientInfo = JSON.parse(localStorage.getItem("patientInfo") || "{}");
+  const patientDisplayName = 
+    storedPatientInfo.fullName || 
+    storedPatientInfo.name || 
+    storedPatientInfo.full_name || 
+    "Patient";
+
   const [activeTab, setActiveTab] = useState("prescriptions");
   const [prescriptions, setPrescriptions] = useState([]);
   const [labReports, setLabReports] = useState([]);
   const [visitHistory, setVisitHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [notifications, setNotifications] = useState([]);
 
   const patientId = localStorage.getItem("patientId");
   const token = localStorage.getItem("token");
@@ -31,23 +38,24 @@ const PatientRecords = () => {
       try {
         setLoading(true);
 
-        // Prescriptions
         const presRes = await fetch(`${API_BASE_URL}/prescriptions/patient/${patientId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (presRes.ok) setPrescriptions(await presRes.json() || []);
 
-        // Lab Reports (VERIFIED only)
         const labRes = await fetch(`${API_BASE_URL}/lab/patient/${patientId}/reports`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (labRes.ok) setLabReports(await labRes.json() || []);
 
-        // Visit History (completed visits)
         const histRes = await fetch(`${API_BASE_URL}/appointments/patient/${patientId}/completed`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (histRes.ok) setVisitHistory(await histRes.json() || []);
+
+        setNotifications([
+          { id: 'info-1', type: 'info', title: 'Records Update', message: 'Check your latest lab reports', icon: FaFlask }
+        ]);
 
       } catch (err) {
         setError("Failed to load records. Please try again later.");
@@ -77,12 +85,19 @@ const PatientRecords = () => {
 
   return (
     <div className="patient-module">
-      <PatientNavbar patientName="Patient" notificationCount={0} />
+      <PatientNavbar 
+        patientInfo={{ name: patientDisplayName }}
+        notifications={notifications}
+        onNotificationsUpdate={setNotifications}
+        notificationCount={notifications.length}
+      />
 
       <main className="records-page patient-container">
         <div className="page-header">
           <h1>Medical Records</h1>
-          <p>View your prescriptions, lab reports, and visit history</p>
+          <p className="page-subtitle">
+            View your prescriptions, lab reports, and complete visit history in one place
+          </p>
         </div>
 
         <div className="records-tabs">
@@ -92,7 +107,7 @@ const PatientRecords = () => {
               className={`records-tab ${activeTab === tab.id ? "active" : ""}`}
               onClick={() => setActiveTab(tab.id)}
             >
-              <tab.icon style={{ marginRight: 8 }} /> {tab.label}
+              <tab.icon /> {tab.label}
             </button>
           ))}
         </div>
@@ -119,16 +134,16 @@ const PatientRecords = () => {
                         <div className="medicine-icon"><FaPills /></div>
                         <div className="medicine-details">
                           <h5>{med.name}</h5>
-                          <p>{med.instruction || med.instructions}</p>
+                          <p className="instruction">{med.instruction || med.instructions || "No instructions"}</p>
                           <div className="medicine-dosage">
-                            <span className="dosage-tag">Dosage: {med.dosage}</span>
-                            <span className="dosage-tag">Duration: {med.duration}</span>
+                            <span className="dosage-tag">Dosage: {med.dosage || "—"}</span>
+                            <span className="dosage-tag">Duration: {med.duration || "—"}</span>
                           </div>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p>No medicines prescribed.</p>
+                    <p className="no-items">No medicines prescribed.</p>
                   )}
                 </div>
               ))
@@ -146,7 +161,7 @@ const PatientRecords = () => {
                   <div className="lab-report-header">
                     <div>
                       <h4>{report.testName || "Lab Test"}</h4>
-                      <p>
+                      <p className="report-date">
                         {report.entryTime ? new Date(report.entryTime).toLocaleDateString() : "—"}
                       </p>
                     </div>
@@ -156,19 +171,17 @@ const PatientRecords = () => {
                   </div>
 
                   {report.status === "VERIFIED" && report.results && Object.keys(report.results).length > 0 && (
-                    <>
-                      <div className="lab-report-results">
-                        {Object.entries(report.results).map(([test, value], idx) => (
-                          <div key={idx} className="lab-result-item">
-                            <span className="result-name">{test}</span>
-                            <span className="result-value">{value}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <button className="btn btn-outline btn-block" style={{ marginTop: 16 }}>
-                        <FaDownload /> Download PDF
+                    <div className="lab-report-results">
+                      {Object.entries(report.results).map(([test, value], idx) => (
+                        <div key={idx} className="lab-result-item">
+                          <span className="result-name">{test}</span>
+                          <span className="result-value">{value}</span>
+                        </div>
+                      ))}
+                      <button className="btn btn-outline download-btn">
+                        <FaDownload /> Download PDF Report
                       </button>
-                    </>
+                    </div>
                   )}
                 </div>
               ))
@@ -182,27 +195,33 @@ const PatientRecords = () => {
               <p className="no-data">No visit history found.</p>
             ) : (
               visitHistory.map((visit) => (
-                <div key={visit.id} className="section-card">
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-                    <div>
-                      <h4 style={{ fontSize: 16, display: "flex", alignItems: "center", gap: 8 }}>
-                        <FaUserMd color="#1976D2" /> {visit.doctorName || "General OPD"}
-                      </h4>
-                      <p style={{ fontSize: 14, color: "#666" }}>
-                        {visit.department || "General"} • {visit.type || "Visit"}
-                      </p>
+                <div key={visit.id} className="visit-history-card">
+                  <div className="visit-header">
+                    <div className="visit-doctor">
+                      <FaUserMd className="doctor-icon" />
+                      <div>
+                        <h4>{visit.doctorName || "General OPD"}</h4>
+                        <p className="department">{visit.department || "General"} • {visit.type || "Consultation"}</p>
+                      </div>
                     </div>
-                    <span style={{ fontSize: 14, color: "#999" }}>
-                      {visit.date ? new Date(visit.date).toLocaleDateString() : "—"}
-                    </span>
+                    <div className="visit-date">
+                      {visit.date ? new Date(visit.date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      }) : "—"}
+                    </div>
                   </div>
-                  <div style={{ background: "#F9FAFB", padding: 16, borderRadius: 8 }}>
-                    <p style={{ fontWeight: 500, marginBottom: 8 }}>
-                      Diagnosis: {visit.diagnosis || "Not recorded"}
-                    </p>
-                    <p style={{ fontSize: 14, color: "#666" }}>
-                      {visit.notes || "No additional notes"}
-                    </p>
+
+                  <div className="visit-details">
+                    <div className="detail-item">
+                      <span className="detail-label">Diagnosis:</span>
+                      <span className="detail-value">{visit.diagnosis || "Not recorded"}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Notes:</span>
+                      <span className="detail-value notes">{visit.notes || "No additional notes provided"}</span>
+                    </div>
                   </div>
                 </div>
               ))
@@ -210,6 +229,16 @@ const PatientRecords = () => {
           </motion.div>
         )}
       </main>
+
+      <motion.button 
+        className="emergency-button"
+        whileHover={{ scale: 1.12 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => window.location.href = 'tel:1134'}
+        aria-label="Emergency Call 1134"
+      >
+        <FaPhone />
+      </motion.button>
 
       <PatientFooter />
     </div>

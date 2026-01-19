@@ -18,8 +18,8 @@ body {
 
 
 
-.btn-primary {
-  background-color: var(--button-action);
+.home-container .hero-section .btn-primary {
+  background-color:var(--button-action);
   font-size: 1.2rem;
   color: white;
   padding: 12px 25px;

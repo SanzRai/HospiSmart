@@ -6,13 +6,12 @@ import {
   FaTrash,
   FaEye,
   FaDownload,
-  FaBan,
-  FaCheckCircle,
   FaSearch,
   FaClock,
-  FaCalendarAlt,
+  FaCalendarAlt, FaBan, FaCheckCircle,
 } from "react-icons/fa";
 import * as XLSX from "xlsx";
+import "../../styles/AdminManagement.css";
 
 const API = "http://localhost:8080/api/admin/doctors";
 const DEPT_API = "http://localhost:8080/api/admin/departments";
@@ -21,6 +20,7 @@ const DoctorManagement = () => {
   const [doctors, setDoctors] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,18 +48,26 @@ const DoctorManagement = () => {
 
   const loadDoctors = async () => {
     try {
-      const token = localStorage.getItem("adminToken");
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No authentication token found");
+
       const res = await fetch(`${API}?t=${Date.now()}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Cache-Control": "no-cache",
         },
       });
-      if (!res.ok) throw new Error("Failed");
+
+      if (!res.ok) {
+        if (res.status === 401) throw new Error("Session expired. Please login again.");
+        throw new Error("Failed to load doctors");
+      }
+
       const data = await res.json();
       setDoctors(data);
+      setError(null);
     } catch (err) {
-      alert("Failed to load doctors. Please login as admin!");
+      setError(err.message || "Failed to load data");
     } finally {
       setLoading(false);
     }
@@ -67,29 +75,28 @@ const DoctorManagement = () => {
 
   const loadDepartments = async () => {
     try {
-      const token = localStorage.getItem("adminToken");
-      const res = await fetch(`${DEPT_API}`, {
+      const token = localStorage.getItem("token");
+      const res = await fetch(DEPT_API, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       if (res.ok) {
         const data = await res.json();
         setDepartments(data);
       }
-    } catch (err) {
+    } catch {
       console.error("Failed to load departments");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("adminToken");
+    const token = localStorage.getItem("token");
     const url = isEditMode ? `${API}/${formData.id}` : API;
     const method = isEditMode ? "PUT" : "POST";
 
     const payload = { ...formData };
-    if (isEditMode && !payload.password.trim()) {
-      delete payload.password;
-    }
+    if (isEditMode && !payload.password.trim()) delete payload.password;
 
     try {
       const res = await fetch(url, {
@@ -101,24 +108,22 @@ const DoctorManagement = () => {
         body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
-        alert(`Doctor ${isEditMode ? "updated" : "added"} successfully!`);
-        setIsModalOpen(false);
-        loadDoctors();
-      } else {
-        const err = await res.text();
-        alert(err || "Operation failed");
-      }
+      if (!res.ok) throw new Error("Operation failed");
+
+      alert(`Doctor ${isEditMode ? "updated" : "added"} successfully!`);
+      setIsModalOpen(false);
+      loadDoctors();
     } catch {
-      alert("Network error");
+      alert("Something went wrong. Please try again.");
     }
   };
 
   const handleToggle = async (id, current) => {
     if (!window.confirm(`Really ${current ? "DEACTIVATE" : "ACTIVATE"} this doctor?`)) return;
+
     try {
-      const token = localStorage.getItem("adminToken");
-      await fetch(`${API}/${id}/status`, {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/${id}/status`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -126,6 +131,8 @@ const DoctorManagement = () => {
         },
         body: JSON.stringify({ isActive: !current }),
       });
+
+      if (!res.ok) throw new Error();
       loadDoctors();
     } catch {
       alert("Failed to update status");
@@ -133,19 +140,21 @@ const DoctorManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this doctor permanently?")) return;
+    if (!window.confirm("Are you sure you want to delete this doctor permanently?")) return;
+
     try {
-      const token = localStorage.getItem("adminToken");
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API}/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) {
-        loadDoctors();
-        alert("Doctor deleted");
-      }
+
+      if (!res.ok) throw new Error();
+
+      alert("Doctor deleted successfully");
+      loadDoctors();
     } catch {
-      alert("Delete failed");
+      alert("Could not delete doctor. Please try again.");
     }
   };
 
@@ -216,10 +225,12 @@ const DoctorManagement = () => {
     );
   });
 
-  if (loading) return <div className="loading">Loading doctors...</div>;
+  if (loading) return <div className="loading-state">Loading doctors...</div>;
+
+  if (error) return <div className="error-message">{error}</div>;
 
   return (
-    <div className="doctor-management">
+    <div className="department-management">
       <div className="header-bar">
         <h1><FaUserMd /> Doctor Management</h1>
         <button onClick={openCreateModal} className="add-btn">
@@ -228,9 +239,18 @@ const DoctorManagement = () => {
       </div>
 
       <div className="stats-grid">
-        <div className="stat-card total"><strong>{doctors.length}</strong> Total Doctors</div>
-        <div className="stat-card active"><strong>{doctors.filter(d => d.isActive).length}</strong> Active</div>
-        <div className="stat-card inactive"><strong>{doctors.filter(d => !d.isActive).length}</strong> Inactive</div>
+        <div className="stat-card total">
+          <strong>{doctors.length}</strong>
+          <span>Total Doctors</span>
+        </div>
+        <div className="stat-card active">
+          <strong>{doctors.filter(d => d.isActive).length}</strong>
+          <span>Active</span>
+        </div>
+        <div className="stat-card inactive">
+          <strong>{doctors.filter(d => !d.isActive).length}</strong>
+          <span>Inactive</span>
+        </div>
       </div>
 
       <div className="controls">
@@ -265,12 +285,12 @@ const DoctorManagement = () => {
           <tbody>
             {filtered.map(d => (
               <tr key={d.id}>
-                <td><strong>{d.name}</strong></td>
+                <td className="dept-name"><strong>{d.name}</strong></td>
                 <td>{d.departmentName || "—"}</td>
-                <td>{d.qualifications}</td>
-                <td>₹{d.consultationFee}</td>
+                <td>{d.qualifications || "—"}</td>
+                <td>₹{d.consultationFee || "—"}</td>
                 <td>{d.availableDays || "—"}</td>
-                <td><FaClock /> {d.startTime} - {d.endTime}</td>
+                <td><FaClock /> {d.startTime || "--"} - {d.endTime || "--"}</td>
                 <td>{d.email || "No login"}</td>
                 <td>
                   <span className={`status ${d.isActive ? "active" : "inactive"}`}>
@@ -278,12 +298,34 @@ const DoctorManagement = () => {
                   </span>
                 </td>
                 <td className="actions">
-                  <button onClick={() => setSelectedDoctor(d)} className="view" title="View"><FaEye /></button>
-                  <button onClick={() => openEditModal(d)} className="edit" title="Edit"><FaEdit /></button>
-                  <button onClick={() => handleToggle(d.id, d.isActive)} className="toggle">
+                  <button
+                    onClick={() => setSelectedDoctor(d)}
+                    className="action-btn view"
+                    title="View"
+                  >
+                    <FaEye />
+                  </button>
+                  <button
+                    onClick={() => openEditModal(d)}
+                    className="action-btn edit"
+                    title="Edit"
+                  >
+                    <FaEdit />
+                  </button>
+                  <button
+                    onClick={() => handleToggle(d.id, d.isActive)}
+                    className={`action-btn toggle ${d.isActive ? "deactivate" : "activate"}`}
+                    title={d.isActive ? "Deactivate" : "Activate"}
+                  >
                     {d.isActive ? <FaBan /> : <FaCheckCircle />}
                   </button>
-                  <button onClick={() => handleDelete(d.id)} className="delete-btn"><FaTrash /></button>
+                  <button
+                    onClick={() => handleDelete(d.id)}
+                    className="action-btn delete"
+                    title="Delete"
+                  >
+                    <FaTrash />
+                  </button>
                 </td>
               </tr>
             ))}
@@ -300,27 +342,49 @@ const DoctorManagement = () => {
               <div className="form-grid">
                 <div className="form-group">
                   <label>Full Name *</label>
-                  <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                  <input
+                    required
+                    value={formData.name}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  />
                 </div>
 
                 <div className="form-group">
                   <label>Department *</label>
-                  <select required value={formData.departmentId} onChange={e => setFormData({...formData, departmentId: e.target.value})}>
+                  <select
+                    required
+                    value={formData.departmentId}
+                    onChange={e => setFormData({ ...formData, departmentId: e.target.value })}
+                  >
                     <option value="">Select Department</option>
                     {departments.map(dept => (
-                      <option key={dept.id} value={dept.id}>{dept.name}</option>
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="form-group">
                   <label>Qualifications *</label>
-                  <input required placeholder="e.g. MBBS, MD (Medicine)" value={formData.qualifications} onChange={e => setFormData({...formData, qualifications: e.target.value})} />
+                  <input
+                    required
+                    placeholder="e.g. MBBS, MD (Medicine)"
+                    value={formData.qualifications}
+                    onChange={e => setFormData({ ...formData, qualifications: e.target.value })}
+                  />
                 </div>
 
                 <div className="form-group">
                   <label>Consultation Fee (₹) *</label>
-                  <input required type="number" min="100" placeholder="e.g. 800" value={formData.consultationFee} onChange={e => setFormData({...formData, consultationFee: e.target.value})} />
+                  <input
+                    required
+                    type="number"
+                    min="100"
+                    placeholder="e.g. 800"
+                    value={formData.consultationFee}
+                    onChange={e => setFormData({ ...formData, consultationFee: e.target.value })}
+                  />
                 </div>
 
                 <div className="form-group full-width">
@@ -329,46 +393,73 @@ const DoctorManagement = () => {
                     required
                     placeholder="e.g. Mon,Tue,Wed,Thu,Fri,Sat"
                     value={formData.availableDays}
-                    onChange={e => setFormData({...formData, availableDays: e.target.value})}
+                    onChange={e => setFormData({ ...formData, availableDays: e.target.value })}
                   />
                 </div>
 
                 <div className="time-row">
                   <div className="form-group">
                     <label><FaClock /> Clinic Start Time *</label>
-                    <input required type="time" value={formData.startTime} onChange={e => setFormData({...formData, startTime: e.target.value})} />
+                    <input
+                      required
+                      type="time"
+                      value={formData.startTime}
+                      onChange={e => setFormData({ ...formData, startTime: e.target.value })}
+                    />
                   </div>
                   <div className="form-group">
                     <label><FaClock /> Clinic End Time *</label>
-                    <input required type="time" value={formData.endTime} onChange={e => setFormData({...formData, endTime: e.target.value})} />
+                    <input
+                      required
+                      type="time"
+                      value={formData.endTime}
+                      onChange={e => setFormData({ ...formData, endTime: e.target.value })}
+                    />
                   </div>
                 </div>
 
                 <div className="form-group">
                   <label>Slot Duration (minutes)</label>
-                  <input type="number" min="10" max="120" step="5" value={formData.slotDurationMinutes} onChange={e => setFormData({...formData, slotDurationMinutes: e.target.value})} />
-                  <small>Default: 15 minutes per patient</small>
+                  <input
+                    type="number"
+                    min="10"
+                    max="120"
+                    step="5"
+                    value={formData.slotDurationMinutes}
+                    onChange={e => setFormData({ ...formData, slotDurationMinutes: e.target.value })}
+                  />
+                  <small >Default: 15 minutes per patient</small>
                 </div>
 
                 <div className="form-group full-width">
                   <label>Login Email *</label>
-                  <input required={!isEditMode} type="email" placeholder="doctor@example.com" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                  <input
+                    required={!isEditMode}
+                    type="email"
+                    placeholder="doctor@example.com"
+                    value={formData.email}
+                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                  />
                 </div>
 
                 <div className="form-group full-width">
                   <label>Password {isEditMode && "(Leave blank to keep current)"}</label>
                   <input
                     type="password"
-                    placeholder={isEditMode ? "Enter new password only if changing" : "Password"}
+                    placeholder={isEditMode ? "New password (optional)" : "Password"}
                     value={formData.password}
-                    onChange={e => setFormData({...formData, password: e.target.value})}
+                    onChange={e => setFormData({ ...formData, password: e.target.value })}
                     required={!isEditMode}
                   />
                 </div>
 
                 <label className="checkbox-label">
-                  <input type="checkbox" checked={formData.isActive} onChange={e => setFormData({...formData, isActive: e.target.checked})} />
-                  <span> Active Account (Can login and see patients)</span>
+                  <input
+                    type="checkbox"
+                    checked={formData.isActive}
+                    onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
+                  />
+                  <span>Active Account (Can login and see patients)</span>
                 </label>
               </div>
 
@@ -376,7 +467,7 @@ const DoctorManagement = () => {
                 <button type="submit" className="save-btn">
                   {isEditMode ? "Update Doctor" : "Add Doctor"}
                 </button>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="cancel-btn">
+                <button type="button" className="cancel-btn" onClick={() => setIsModalOpen(false)}>
                   Cancel
                 </button>
               </div>
@@ -385,23 +476,29 @@ const DoctorManagement = () => {
         </div>
       )}
 
-      {/* View Details Modal */}
+      {/* Simple View Modal */}
       {selectedDoctor && (
         <div className="modal-overlay" onClick={() => setSelectedDoctor(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2>Doctor Details</h2>
-            <div className="modal-grid">
-              <div><strong>Name:</strong> {selectedDoctor.name}</div>
-              <div><strong>Department:</strong> {selectedDoctor.departmentName || "—"}</div>
-              <div><strong>Qualifications:</strong> {selectedDoctor.qualifications}</div>
-              <div><strong>Fee:</strong> ₹{selectedDoctor.consultationFee}</div>
-              <div><strong>Available Days:</strong> {selectedDoctor.availableDays || "—"}</div>
-              <div><strong>Clinic Timing:</strong> {selectedDoctor.startTime} - {selectedDoctor.endTime}</div>
-              <div><strong>Slot Duration:</strong> {selectedDoctor.slotDurationMinutes} minutes</div>
-              <div><strong>Login Email:</strong> {selectedDoctor.email || "No login access"}</div>
-              <div><strong>Status:</strong> <span className={selectedDoctor.isActive ? "active" : "inactive"}>{selectedDoctor.isActive ? "Active" : "Inactive"}</span></div>
+          <div className="modal simple-view" onClick={e => e.stopPropagation()}>
+            <h2>{selectedDoctor.name}</h2>
+            <div className="modal-content">
+              <p><strong>Department:</strong> {selectedDoctor.departmentName || "—"}</p>
+              <p><strong>Qualifications:</strong> {selectedDoctor.qualifications || "—"}</p>
+              <p><strong>Consultation Fee:</strong> ₹{selectedDoctor.consultationFee || "—"}</p>
+              <p><strong>Available Days:</strong> {selectedDoctor.availableDays || "—"}</p>
+              <p><strong>Timing:</strong> {selectedDoctor.startTime || "--"} - {selectedDoctor.endTime || "--"}</p>
+              <p><strong>Slot Duration:</strong> {selectedDoctor.slotDurationMinutes} minutes</p>
+              <p><strong>Login Email:</strong> {selectedDoctor.email || "No login access"}</p>
+              <p>
+                <strong>Status:</strong>{" "}
+                <span className={selectedDoctor.isActive ? "status-active" : "status-inactive"}>
+                  {selectedDoctor.isActive ? "Active" : "Inactive"}
+                </span>
+              </p>
             </div>
-            <button onClick={() => setSelectedDoctor(null)} className="close-btn">Close</button>
+            <button className="close-btn" onClick={() => setSelectedDoctor(null)}>
+              Close
+            </button>
           </div>
         </div>
       )}

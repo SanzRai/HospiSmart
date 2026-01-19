@@ -1,40 +1,55 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FaSync, FaCheckCircle, FaExclamationCircle, FaClock, FaUser, FaBell, FaFilter } from "react-icons/fa";
+import { 
+  FaSync, FaCheckCircle,FaCalendarPlus, FaExclamationCircle, FaClock, FaUser, FaBell, FaFilter, FaPhone 
+} from "react-icons/fa";
 import PatientNavbar from "../../components/PatientNavbar";
 import PatientFooter from "../../components/PatientFooter";
 import useWebSocket from "../../hooks/useWebSocket";
-import "../../styles/PatientModule.css";
+import "../../styles/PatientQueue.css"; 
 
 const API_BASE_URL = "http://localhost:8080/api";
 
 const PatientQueue = () => {
+  const navigate = useNavigate();
+
+  const storedPatientInfo = JSON.parse(localStorage.getItem("patientInfo") || "{}");
+  const patientDisplayName = 
+    storedPatientInfo.fullName || 
+    storedPatientInfo.name || 
+    storedPatientInfo.full_name || 
+    "Patient";
+
   const [department, setDepartment] = useState("all");
   const [queueData, setQueueData] = useState(null);
   const [queueList, setQueueList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notifications, setNotifications] = useState([]);
 
   const patientPhone = localStorage.getItem("patientPhone");
   const token = localStorage.getItem("token");
 
-  const { isConnected, lastMessage } = useWebSocket("ws://localhost:8080/ws/queue", {
+  const { isConnected } = useWebSocket("ws://localhost:8080/ws/queue", {
     onMessage: (data) => {
-      if (data.type === "queue_update") {
-        fetchQueue(); // Refresh on real-time update
+      if (data?.type === "queue_update") {
+        fetchQueue();
       }
     },
   });
 
   const fetchQueue = async () => {
-    if (!patientPhone) {
-      setError("Please login to view queue status");
+    if (!patientPhone || !token) {
+      setError("Please login to view queue");
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
+      setError(null);
+
       const res = await fetch(`${API_BASE_URL}/opd/queue/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -43,39 +58,34 @@ const PatientQueue = () => {
 
       const data = await res.json();
 
-      // Filter today's queue (assuming endpoint returns today's + future)
       const today = new Date().toISOString().split("T")[0];
       const todayQueue = data.filter(
-        (item) => item.appointmentDate === today && item.paymentStatus === "PAID"
+        (item) => item.appointmentDate === today && 
+                  (item.paymentStatus === "PAID" || item.type === "OPD")
       );
 
-      // Find your token
       const yourItem = todayQueue.find((item) => item.patientPhone === patientPhone);
 
       if (!yourItem) {
-        setError("You have no active queue entry today");
+        setError("No active queue entry found for today");
         setQueueData(null);
         setQueueList([]);
+        // Still allow page to render full layout
         setLoading(false);
         return;
       }
 
-      // Build queue list (only today's queue)
       const formattedQueue = todayQueue.map((item) => ({
         token: item.tokenNumber,
         status:
-          item.patientPhone === patientPhone
-            ? "you"
-            : item.status === "VITALS_DONE" || item.status === "CALLING"
-            ? "current"
-            : item.status === "COMPLETED" || item.status === "ATTENDED"
-            ? "completed"
-            : "waiting",
+          item.patientPhone === patientPhone ? "you" :
+          item.status === "VITALS_DONE" || item.status === "CALLING" ? "current" :
+          item.status === "COMPLETED" || item.status === "ATTENDED" ? "completed" :
+          "waiting",
       }));
 
-      // Calculate position and estimated wait
       const position = todayQueue.findIndex((item) => item.patientPhone === patientPhone) + 1;
-      const estimatedWait = position * 15; 
+      const estimatedWait = position * 15;
 
       setQueueData({
         yourToken: yourItem.tokenNumber,
@@ -86,8 +96,15 @@ const PatientQueue = () => {
       });
 
       setQueueList(formattedQueue);
+
+      // Optional notification when queue updates
+      setNotifications(prev => [
+        ...prev,
+        { id: Date.now(), type: 'info', title: 'Queue Updated', message: 'Live queue status refreshed', icon: FaSync }
+      ]);
+
     } catch (err) {
-      setError("Failed to load queue. Please try again.");
+      setError("Failed to load queue. Please try again later.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -96,7 +113,7 @@ const PatientQueue = () => {
 
   useEffect(() => {
     fetchQueue();
-    const interval = setInterval(fetchQueue, 30000); // Poll every 30s as backup
+    const interval = setInterval(fetchQueue, 30000); // refresh every 30s
     return () => clearInterval(interval);
   }, [patientPhone, token]);
 
@@ -108,135 +125,170 @@ const PatientQueue = () => {
     { id: "pediatric", name: "Pediatrics" },
   ];
 
-  const filteredQueue = department === "all" ? queueList : queueList.filter((item) => item.department === department);
+  const filteredQueue = department === "all" ? queueList : queueList.filter((item) => 
+    item.department?.toLowerCase().includes(department)
+  );
 
   const progressPercentage = queueData ? Math.max(0, 100 - (queueData.position / 15) * 100) : 0;
   const isAlmostTurn = queueData && queueData.position <= 2;
 
-  if (loading) return <div className="loading">Loading queue status...</div>;
-
-  if (error || !queueData) {
-    return (
-      <div className="error-message">
-        <FaExclamationCircle /> {error || "No active queue entry found today."}
-      </div>
-    );
-  }
-
   return (
     <div className="patient-module">
-      <PatientNavbar patientName="Patient" notificationCount={0} />
+      <PatientNavbar 
+        patientInfo={{ name: patientDisplayName }}
+        notifications={notifications}
+        onNotificationsUpdate={setNotifications}
+        notificationCount={notifications.length}
+      />
 
       <main className="queue-page patient-container">
-        {/* Connection Status */}
-        <div className={`connection-status ${isConnected ? "connected" : "disconnected"}`}>
-          <span className={`connection-dot ${isConnected ? "connected" : "disconnected"}`}></span>
-          {isConnected ? "Live Connected" : "Offline - updates may be delayed"}
-        </div>
+        {/* Small live connection indicator */}
+        <div className={`connection-indicator ${isConnected ? "connected" : "disconnected"}`} />
 
-        {/* Alert when almost turn */}
-        {isAlmostTurn && (
-          <motion.div className="queue-alert" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+        {/* Alert when your turn is near */}
+        {isAlmostTurn && queueData && (
+          <motion.div 
+            className="queue-alert"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          >
             <FaBell size={24} />
             <div>
               <strong>Your turn is coming soon!</strong>
-              <p>Please proceed to the consultation room.</p>
+              <p>Please proceed to the consultation room (Token: {queueData.yourToken})</p>
             </div>
           </motion.div>
         )}
 
-        {/* Queue Status Card */}
-        <motion.div className="queue-status-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h2>Your Token Number</h2>
-          <div className="queue-token">{queueData.yourToken}</div>
-
-          <div className="queue-info-grid">
-            <div className="queue-info-item">
-              <label>Current Token</label>
-              <span>{queueData.currentToken}</span>
-            </div>
-            <div className="queue-info-item">
-              <label>Your Position</label>
-              <span>#{queueData.position}</span>
-            </div>
-            <div className="queue-info-item">
-              <label>Est. Wait</label>
-              <span>~{queueData.estimatedWait} min</span>
+        {/* Main Content - always show layout */}
+        {loading ? (
+          <div className="loading">Loading queue status...</div>
+        ) : error ? (
+          <div className="queue-error">
+            <FaExclamationCircle size={48} />
+            <h2>{error}</h2>
+            <p>We will notify you when there is active queue.</p>
+            <div className="error-actions">
+              <button className="btn btn-primary" onClick={fetchQueue}>
+                <FaSync /> Try Again
+              </button>
+              <button className="btn btn-outline" onClick={() => navigate("/patient-dashboard")}>
+                Back to Dashboard
+              </button>
             </div>
           </div>
-
-          <div className="queue-progress">
-            <div className="queue-progress-bar">
-              <motion.div
-                className="queue-progress-fill"
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPercentage}%` }}
-                transition={{ duration: 1 }}
-              />
+        ) : !queueData ? (
+          <div className="queue-no-entry">
+            <FaClock size={48} />
+            <h2>No Active Queue Today</h2>
+            <p>You don't have any pending queue entry for today.</p>
+            <div className="no-entry-actions">
+              <button className="btn btn-primary" onClick={() => navigate("/patient/appointments")}>
+                <FaCalendarPlus /> Book New Appointment
+              </button>
+              <button className="btn btn-outline" onClick={fetchQueue}>
+                <FaSync /> Refresh Queue
+              </button>
             </div>
           </div>
-        </motion.div>
+        ) : (
+          <>
+            <motion.div className="queue-status-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <h2>Your Token</h2>
+              <div className="queue-token">{queueData.yourToken}</div>
 
-        {/* Department Filter */}
-        <div className="section-card">
-          <div className="section-card-header">
-            <h2><FaFilter /> Filter by Department</h2>
-          </div>
-          <select value={department} onChange={(e) => setDepartment(e.target.value)}>
-            {departments.map((dept) => (
-              <option key={dept.id} value={dept.id}>
-                {dept.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Queue List */}
-        <div className="queue-list">
-          <div className="section-card-header">
-            <h2><FaClock /> Queue Status</h2>
-            <button onClick={fetchQueue} style={{ background: "none", border: "none", color: "#1976D2" }}>
-              <FaSync /> Refresh
-            </button>
-          </div>
-
-          {filteredQueue.length === 0 ? (
-            <p className="no-data">No one in queue for this department.</p>
-          ) : (
-            filteredQueue.map((item, index) => (
-              <motion.div
-                key={item.token}
-                className={`queue-list-item ${item.status}`}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  {item.status === "completed" && <FaCheckCircle color="#27AE60" />}
-                  {item.status === "current" && <FaUser color="#1976D2" />}
-                  {item.status === "waiting" && <FaClock color="#999" />}
-                  {item.status === "you" && <FaUser color="#1976D2" />}
-                  <span style={{ fontWeight: item.status === "you" ? "bold" : "normal" }}>
-                    {item.token}
-                  </span>
+              <div className="queue-info-grid">
+                <div className="queue-info-item">
+                  <label>Current Serving</label>
+                  <span>{queueData.currentToken}</span>
                 </div>
-                <span
-                  style={{
-                    fontSize: 12,
-                    padding: "4px 12px",
-                    borderRadius: 20,
-                    background:
-                      item.status === "current" ? "#27AE60" : item.status === "you" ? "#1976D2" : item.status === "completed" ? "#E5E7EB" : "#F9FAFB",
-                    color: ["current", "you"].includes(item.status) ? "white" : "#666",
-                  }}
-                >
-                  {item.status === "you" ? "You" : item.status === "current" ? "Now Serving" : item.status === "completed" ? "Done" : "Waiting"}
-                </span>
-              </motion.div>
-            ))
-          )}
-        </div>
+                <div className="queue-info-item">
+                  <label>Your Position</label>
+                  <span>#{queueData.position}</span>
+                </div>
+                <div className="queue-info-item">
+                  <label>Est. Wait Time</label>
+                  <span>~{queueData.estimatedWait} min</span>
+                </div>
+              </div>
+
+              <div className="queue-progress">
+                <div className="queue-progress-bar">
+                  <motion.div
+                    className="queue-progress-fill"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPercentage}%` }}
+                    transition={{ duration: 1.2 }}
+                  />
+                </div>
+              </div>
+            </motion.div>
+
+            <div className="section-card">
+              <div className="section-card-header">
+                <h2><FaFilter /> Department Filter</h2>
+              </div>
+              <select value={department} onChange={(e) => setDepartment(e.target.value)}>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="queue-list">
+              <div className="section-card-header">
+                <h2><FaClock /> Live Queue</h2>
+                <button className="refresh-btn" onClick={fetchQueue}>
+                  <FaSync /> Refresh
+                </button>
+              </div>
+
+              {filteredQueue.length === 0 ? (
+                <p className="no-data">No one in queue for this department</p>
+              ) : (
+                filteredQueue.map((item, index) => (
+                  <motion.div
+                    key={item.token}
+                    className={`queue-list-item ${item.status}`}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <div className="queue-item-left">
+                      {item.status === "completed" && <FaCheckCircle className="status-icon success" />}
+                      {item.status === "current" && <FaUser className="status-icon current" />}
+                      {item.status === "waiting" && <FaClock className="status-icon waiting" />}
+                      {item.status === "you" && <FaUser className="status-icon you" />}
+                      <span className={`token ${item.status === "you" ? "you" : ""}`}>
+                        {item.token}
+                      </span>
+                    </div>
+                    <span className={`queue-status-badge ${item.status}`}>
+                      {item.status === "you" ? "You" : 
+                       item.status === "current" ? "Now Serving" : 
+                       item.status === "completed" ? "Done" : "Waiting"}
+                    </span>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </>
+        )}
       </main>
+
+      {/* Floating Emergency Button */}
+      <motion.button 
+        className="emergency-button"
+        whileHover={{ scale: 1.12 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => window.location.href = 'tel:1134'}
+        aria-label="Emergency Call 1134"
+      >
+        <FaPhone />
+      </motion.button>
 
       <PatientFooter />
     </div>

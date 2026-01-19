@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaUser, FaLock, FaEye, FaEyeSlash, FaArrowLeft } from 'react-icons/fa';
@@ -49,38 +49,73 @@ const Login = () => {
 
     let success = false;
 
-    for (const endpoint of possibleEndpoints) {
-      try {
-        const response = await fetch(`${API_BASE_URL}${endpoint.url}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            [endpoint.field]: identifier.trim(),
-            password,
-          }),
-        });
+    try {
+      for (const endpoint of possibleEndpoints) {
+        try {
+          const response = await fetch(`${API_BASE_URL}${endpoint.url}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              [endpoint.field]: identifier.trim(),
+              password,
+            }),
+          });
 
-        const data = await response.json();
+          const text = await response.text();
+          const data = text ? JSON.parse(text) : {};
 
-        if (response.ok) {
+          if (!response.ok) {
+            throw new Error(data.message || 'Login failed');
+          }
+
           success = true;
+
           const receivedRole = (data.role || '').toLowerCase();
 
           localStorage.setItem('token', data.token);
           localStorage.setItem('userRole', receivedRole);
-          localStorage.setItem('userId', data.userId || data.patient?.id || data.doctorId || data.staffId || data.adminId || '');
+          localStorage.setItem(
+            'userId',
+            data.userId ||
+              data.patient?.id ||
+              data.doctorId ||
+              data.staffId ||
+              data.adminId ||
+              ''
+          );
 
           if (receivedRole === 'patient') {
-            const resolvedPatientId = data.patient?.id ?? data.userId;
+            let patientData = data.patient || {};
 
-            if (!resolvedPatientId) {
-              throw new Error("Patient ID missing from login response");
+            const resolvedPatientId =
+              data.patient?.id ??
+              data.userId ??
+              data.id ??
+              data.patientId;
+
+            if (!patientData.fullName && resolvedPatientId) {
+              try {
+                const profileRes = await fetch(
+                  `${API_BASE_URL}/patients/${resolvedPatientId}`,
+                  {
+                    headers: {
+                      Authorization: `Bearer ${data.token}`,
+                    },
+                  }
+                );
+                if (profileRes.ok) {
+                  patientData = await profileRes.json();
+                }
+              } catch {}
             }
 
-            localStorage.setItem('patientId', String(resolvedPatientId));
+            localStorage.setItem('patientInfo', JSON.stringify(patientData));
+            if (resolvedPatientId) {
+              localStorage.setItem('patientId', String(resolvedPatientId));
+            }
             localStorage.setItem(
               'patientPhone',
-              data.patient?.phoneNumber || identifier.trim()
+              patientData.phoneNumber || identifier.trim()
             );
           }
 
@@ -93,23 +128,20 @@ const Login = () => {
             patient: '/patient-dashboard',
             doctor: '/doctor/dashboard',
             admin: '/admin-dashboard',
-            staff: '/staff/dashboard'
+            staff: '/staff/dashboard',
           };
 
-          const redirectPath = roleRedirects[receivedRole] || '/';
-          navigate(redirectPath, { replace: true });
+          navigate(roleRedirects[receivedRole] || '/', { replace: true });
           break;
-        }
-      } catch (err) {
-        console.error(`Error on ${endpoint.type}:`, err);
+        } catch {}
       }
-    }
 
-    if (!success) {
-      setServerError('Invalid credentials. Please check your details and try again.');
+      if (!success) {
+        setServerError('Invalid credentials. Please check your details and try again.');
+      }
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -142,9 +174,7 @@ const Login = () => {
 
             <form onSubmit={handleSubmit} className="login-form" noValidate>
               <div className="input-group">
-                <label>
-                  <FaUser /> Phone or Email 
-                </label>
+                <label><FaUser /> Phone or Email</label>
                 <input
                   type="text"
                   value={identifier}
@@ -153,60 +183,44 @@ const Login = () => {
                     setIdentifierError('');
                     setServerError('');
                   }}
-                  placeholder="98XXXXXXXX / email@example.com "
-                  required
-                  autoFocus
+                  placeholder="98XXXXXXXX / email@example.com"
+                  disabled={loading}
                   className={identifierError ? 'input-error' : ''}
                 />
                 {identifierError && <span className="field-error">{identifierError}</span>}
               </div>
 
               <div className="input-group password-group">
-                <label>
-                  <FaLock /> Password
-                </label>
+                <label><FaLock /> Password</label>
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
                     setPasswordError('');
                     setServerError('');
                   }}
-                  placeholder="***********"
-                  required
+                  disabled={loading}
                   className={passwordError ? 'input-error' : ''}
                 />
-                <span
-                  className="password-toggle"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
+                <span className="password-toggle" onClick={() => setShowPassword(!showPassword)}>
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </span>
                 {passwordError && <span className="field-error">{passwordError}</span>}
               </div>
 
               <div className="forgot-password-wrapper">
-                <Link to="/forgot-password" className="forgot-password-link">
-                  Forgot password?
-                </Link>
+                <Link to="/forgot-password">Forgot password?</Link>
               </div>
 
               {serverError && <p className="error-message">{serverError}</p>}
 
-              <button
-                type="submit"
-                className="btn-login"
-                disabled={loading}
-              >
+              <button type="submit" className="btn-login" disabled={loading}>
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
 
               <div className="register-prompt">
-                Don't have an account?{' '}
-                <Link to="/patient-register" className="register-link">
-                  Register as Patient
-                </Link>
+                Don't have an account? <Link to="/patient-register">Register as Patient</Link>
               </div>
             </form>
           </motion.div>

@@ -1,0 +1,463 @@
+/* styles/LabModule.css */
+
+.lab-module {
+  --primary: #1976d2;
+  --secondary: #64b5f6;
+  --action: #ff7043;
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #ef4444;
+  --bg: #f9fafb;
+  --surface: #ffffff;
+  --muted: #475569;
+  --border: #e2e8f0;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  padding: 1.5rem 2rem 3rem;
+  max-width: 1600px;
+  margin: 0 auto;
+  background: var(--bg);
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #1e293b;
+}
+
+/* Header & Stats */
+.lab-module .module-header {
+  margin-bottom: 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.lab-module .module-header h2 {
+  font-size: 1.95rem;
+  font-weight: 700;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.lab-module .quick-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+}
+
+.lab-module .quick-stats .stat {
+  background: white;
+  padding: 1rem 1.4rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+  border-left: 5px solid var(--primary);
+}
+
+/* Tabs */
+.lab-module .module-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0.9rem;
+}
+
+.lab-module .module-tabs button {
+  padding: 0.9rem 1.7rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.lab-module .module-tabs button:hover {
+  color: var(--primary);
+  background: rgba(25, 118, 210, 0.05);
+}
+
+.lab-module .module-tabs button.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 700;
+  background: white;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.12);
+}
+
+/* Toast */
+.lab-module .toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  padding: 14px 24px;
+  border-radius: var(--radius-md);
+  color: white;
+  font-weight: 500;
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 320px;
+}
+
+.lab-module .toast.success { background: var(--success); }
+.lab-module .toast.error   { background: var(--danger); }
+
+/* Tab Content Wrapper */
+.lab-module .tab-content {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 1.8rem 2rem;
+  box-shadow: var(--shadow-md);
+}
+
+/* Search Bar */
+.lab-module .search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1.6rem;
+  max-width: 420px;
+}
+
+.lab-module .search-bar input {
+  flex: 1;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+}
+
+.lab-module .search-bar input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.15);
+}
+
+/* Sample Cards - Pending Collection */
+.lab-module .samples-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.lab-module .sample-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.lab-module .sample-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--secondary);
+}
+
+.lab-module .sample-barcode {
+  font-size: 1.4rem;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600;
+  min-width: 160px;
+}
+
+.lab-module .sample-info h4 {
+  margin: 0 0 0.6rem;
+  font-size: 1.25rem;
+}
+
+.lab-module .sample-info p {
+  margin: 0.3rem 0;
+  color: var(--muted);
+}
+
+.lab-module .sample-status .status-badge {
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.lab-module .status-badge.paid {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.lab-module .collect-btn {
+  margin-left: auto;
+  padding: 0.8rem 1.6rem;
+  background: var(--action);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lab-module .collect-btn:hover {
+  background: #e65c32;
+  transform: translateY(-1px);
+}
+
+.lab-module .collect-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Result Entry Cards */
+.lab-module .entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.lab-module .entry-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.6rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.lab-module .entry-header h4 {
+  margin: 0 0 0.5rem;
+  color: var(--primary);
+}
+
+.lab-module .entry-header p,
+.lab-module .entry-header small {
+  margin: 0.3rem 0;
+  color: var(--muted);
+}
+
+.lab-module .parameters-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2rem 0;
+}
+
+.lab-module .parameters-table th,
+.lab-module .parameters-table td {
+  padding: 0.9rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.lab-module .parameters-table th {
+  background: #f1f5f9;
+  font-weight: 600;
+  color: #334155;
+}
+
+.lab-module .parameters-table input {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.lab-module .parameters-table input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.15);
+}
+
+.lab-module .parameters-table input.abnormal {
+  border-color: var(--danger);
+  background: #fee2e2;
+}
+
+.lab-module .submit-btn {
+  padding: 0.9rem 1.8rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lab-module .submit-btn:hover {
+  background: #1565c0;
+}
+
+.lab-module .submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Verification Cards */
+.lab-module .verification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.lab-module .verification-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.6rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.lab-module .verification-header h4 {
+  margin: 0 0 0.5rem;
+  color: var(--primary);
+}
+
+.lab-module .verification-header p,
+.lab-module .verification-header small {
+  margin: 0.3rem 0;
+  color: var(--muted);
+}
+
+.lab-module .results-preview table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2rem 0;
+}
+
+.lab-module .results-preview th,
+.lab-module .results-preview td {
+  padding: 0.9rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.lab-module .results-preview th {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+.lab-module .abnormal-row {
+  background: #fee2e2;
+}
+
+.lab-module .abnormal-badge {
+  background: var(--danger);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.lab-module .verification-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.4rem;
+  justify-content: flex-end;
+}
+
+.lab-module .approve-btn,
+.lab-module .reject-btn {
+  padding: 0.85rem 1.6rem;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  transition: all 0.2s;
+}
+
+.lab-module .approve-btn {
+  background: var(--success);
+  color: white;
+}
+
+.lab-module .approve-btn:hover {
+  background: #047857;
+}
+
+.lab-module .reject-btn {
+  background: var(--danger);
+  color: white;
+}
+
+.lab-module .reject-btn:hover {
+  background: #dc2626;
+}
+
+.lab-module button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Empty State */
+.lab-module .empty-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--muted);
+}
+
+.lab-module .empty-state svg {
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+/* Info Text */
+.lab-module .info-text {
+  color: var(--muted);
+  font-style: italic;
+  margin-bottom: 1.4rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .lab-module .sample-card,
+  .lab-module .entry-card,
+  .lab-module .verification-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .lab-module .collect-btn,
+  .lab-module .verification-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .lab-module .module-tabs {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .lab-module .module-tabs button {
+    width: 100%;
+    justify-content: center;
+  }
+}
