@@ -43,14 +43,14 @@ public class LabTestRequest {
     @ElementCollection
     @CollectionTable(name = "lab_test_request_results",
             joinColumns = @JoinColumn(name = "lab_test_request_id"))
-    @OrderColumn(name = "result_index")  // ← This fixes the 'results_key' error
+    @OrderColumn(name = "result_index") 
     private List<LabResult> results = new ArrayList<>();
 
 
     @ElementCollection
     @CollectionTable(name = "lab_test_request_parameters",
             joinColumns = @JoinColumn(name = "lab_test_request_id"))
-    @OrderColumn(name = "parameter_index")  // ← Recommended for ordered lists
+    @OrderColumn(name = "parameter_index") 
     private List<TestParameter> parameters = new ArrayList<>();
 
     public String getPatientName() {

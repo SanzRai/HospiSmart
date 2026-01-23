@@ -35,7 +35,7 @@ public class BedController {
 
     @PostMapping("/add")
     public ResponseEntity<?> addBed(@RequestBody Bed bed) {
-        bed.setStatus("AVAILABLE"); // Default
+        bed.setStatus("AVAILABLE"); 
         Bed saved = bedRepository.save(bed);
         return ResponseEntity.ok(saved);
     }
@@ -44,7 +44,7 @@ public class BedController {
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateBedStatus(@PathVariable Long id, @RequestBody Map<String, String> payload) {
         return bedRepository.findById(id).map(bed -> {
-            bed.setStatus(payload.get("status")); // AVAILABLE, OCCUPIED, MAINTENANCE
+            bed.setStatus(payload.get("status"));
             bedRepository.save(bed);
             return ResponseEntity.ok(bed);
         }).orElse(ResponseEntity.notFound().build());

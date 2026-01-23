@@ -74,7 +74,7 @@ public class StaffController {
     public ResponseEntity<?> getProfile(@PathVariable Long id) {
         return staffRepository.findById(id)
                 .map(staff -> {
-                    staff.setPassword(null); // Don't send password hash to frontend
+                    staff.setPassword(null); 
                     return ResponseEntity.ok(staff);
                 })
                 .orElse(ResponseEntity.notFound().build());

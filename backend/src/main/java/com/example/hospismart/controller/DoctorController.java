@@ -97,7 +97,6 @@ public class DoctorController {
                     map.put("id", d.getId());
                     map.put("name", d.getName());
                     map.put("consultationFee", d.getConsultationFee());
-                    // Add other fields if needed
                     return map;
                 })
                 .collect(Collectors.toList());
@@ -118,7 +117,6 @@ public class DoctorController {
         private String email;
         private String password;
 
-        // getters setters
         public String getEmail() {
             return email;
         }
@@ -170,7 +168,6 @@ public class DoctorController {
 
         Doctor doctor = doctorOpt.get();
 
-        // Only allow updating specific fields (security)
         if (request.getQualifications() != null) {
             doctor.setQualifications(request.getQualifications());
         }
@@ -189,7 +186,6 @@ public class DoctorController {
 
         doctorRepository.save(doctor);
 
-        // Return updated doctor data (so frontend can refresh localStorage if needed)
         Map<String, Object> updatedData = new HashMap<>();
         updatedData.put("id", doctor.getId());
         updatedData.put("name", doctor.getName());

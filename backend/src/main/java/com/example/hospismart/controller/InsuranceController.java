@@ -83,7 +83,7 @@ public class InsuranceController {
 
             patientInsuranceRepository.save(pi);
 
-            patient.setInsuranceProvider(provider.getName()); // Stores name for easy display
+            patient.setInsuranceProvider(provider.getName()); 
             patient.setInsuranceProviderId(provider.getId());
             patient.setInsurancePolicyNumber(policyNumber);
             patient.setInsurancePolicyLimit(policyLimit);

@@ -23,7 +23,7 @@ public class AdminSettingsService {
     public AdminSettingsDTO getSettings() {
         AdminSettings settings = repo.findById(SETTINGS_ID).orElseGet(() -> {
             AdminSettings def = AdminSettings.builder()
-                    .id(SETTINGS_ID) // Force ID 1
+                    .id(SETTINGS_ID)
                     .hospitalName("My Hospital")
                     .tagline("Care You Can Trust")
                     .onlineBookingAllowed(true)
@@ -41,7 +41,7 @@ public class AdminSettingsService {
 
     public AdminSettingsDTO updateSettings(AdminSettingsDTO dto) {
         AdminSettings settings = repo.findById(SETTINGS_ID).orElse(new AdminSettings());
-        settings.setId(SETTINGS_ID); // Ensure we are saving to ID 1
+        settings.setId(SETTINGS_ID);
 
 
         settings.setHospitalName(dto.getHospitalName());

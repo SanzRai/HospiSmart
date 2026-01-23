@@ -38,7 +38,6 @@ public class AdminDashboardController extends AdminBaseController {
         summary.put("totalDoctors", doctorRepository.count());
         summary.put("totalPatients", patientRepository.count());
 
-        // monthly appointments (this month)
         YearMonth now = YearMonth.now();
         LocalDate startOfMonth = now.atDay(1);
         LocalDate endOfMonth = now.atEndOfMonth();
@@ -47,7 +46,7 @@ public class AdminDashboardController extends AdminBaseController {
                 .count();
         summary.put("monthlyAppointments", monthlyAppointments);
 
-        // build appointmentTrend for last 6 months
+
         List<Map<String, Object>> trend = new ArrayList<>();
         YearMonth iter = now.minusMonths(5);
         for (int i = 0; i < 6; i++) {

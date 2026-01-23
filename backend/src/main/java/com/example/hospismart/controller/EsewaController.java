@@ -32,10 +32,8 @@ public class EsewaController {
                 byte[] decoded = Base64.getDecoder().decode(encoded.getBytes(StandardCharsets.UTF_8));
                 String decodedString = new String(decoded, StandardCharsets.UTF_8);
                 dataMap = mapper.readValue(decodedString, Map.class);
-                // debug log
                 System.out.println("Decoded eSewa payload from encodedData: " + decodedString);
             } else {
-                // assume payload is already JSON decoded form from frontend
                 dataMap = payload;
                 System.out.println("Received eSewa payload (decoded): " + mapper.writeValueAsString(dataMap));
             }

@@ -52,7 +52,7 @@ public class DoctorAdminController extends AdminBaseController {
             map.put("endTime", d.getEndTime());
             map.put("slotDurationMinutes", d.getSlotDurationMinutes());
             map.put("isActive", d.isActive());
-            map.put("email", d.getEmail() != null ? d.getEmail() : "");  // FIXED: Inside the map!
+            map.put("email", d.getEmail() != null ? d.getEmail() : ""); 
             return map;
         }).collect(Collectors.toList());
 
@@ -68,7 +68,7 @@ public class DoctorAdminController extends AdminBaseController {
             doctor.setPassword(passwordEncoder.encode(doctor.getPassword()));
         }
         Doctor saved = doctorRepository.save(doctor);
-        saved.setPassword(null);  // Never return password
+        saved.setPassword(null);  
         return ResponseEntity.ok(saved);
     }
 

@@ -1,4 +1,3 @@
-// src/main/java/com/example/hospismart/service/BillingService.java
 package com.example.hospismart.service;
 
 import com.example.hospismart.dto.BillingRequest;
@@ -28,7 +27,6 @@ public class BillingService {
     public Billing createBilling(BillingRequest request) {
         Billing billing = new Billing();
 
-        // Generate Receipt ID: REC-2025-0001
         String receiptId = "REC-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MMdd")) +
                 "-" + String.format("%04d", billingRepository.count() + 1);
         billing.setReceiptId(receiptId);

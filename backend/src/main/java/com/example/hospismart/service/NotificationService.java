@@ -88,7 +88,7 @@ public class NotificationService {
             message.setTo(to);
             message.setSubject(subject);
             message.setText(text);
-            message.setFrom("rairoshani321@gmail.com"); // ← Consider making this configurable
+            message.setFrom("rairoshani321@gmail.com"); 
             mailSender.send(message);
             System.out.println("Email sent successfully to " + to);
         } catch (Exception e) {

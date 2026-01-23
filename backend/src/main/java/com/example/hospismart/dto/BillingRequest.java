@@ -18,7 +18,7 @@ public class BillingRequest {
     private double consultingFee;
     private String symptoms;
 
-    private String paymentType;         // SELF, SSF, INSURANCE, STAFF
+    private String paymentType;         
     private String ssfNumber;
     private String insuranceProvider;
     private String insurancePolicyNumber;

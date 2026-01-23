@@ -34,7 +34,7 @@ public class BookingController {
                     boolean isPaid = "PAID".equalsIgnoreCase(apt.getPaymentStatus());
                     return isToday && isOpd && isPaid;
                 })
-                .sorted((a, b) -> Long.compare(b.getId(), a.getId())) // newest first
+                .sorted((a, b) -> Long.compare(b.getId(), a.getId())) 
                 .collect(Collectors.toList());
 
         List<Appointment> upcomingAppointments = appointmentRepository.findAll().stream()
@@ -62,7 +62,7 @@ public class BookingController {
             map.put("symptoms", apt.getSymptoms());
             map.put("department", apt.getDepartment() != null ? apt.getDepartment() : "General OPD");
             map.put("paymentStatus", apt.getPaymentStatus());
-            map.put("status", apt.getStatus() != null ? apt.getStatus().toLowerCase() : "pending"); // ADDED
+            map.put("status", apt.getStatus() != null ? apt.getStatus().toLowerCase() : "pending");
             map.put("bookedAt", apt.getAppointmentDate().toString());
             map.put("tokenNumber", apt.getTokenNumber());
             return map;

@@ -212,7 +212,7 @@ public class AppointmentController {
     public ResponseEntity<?> getCompletedPatientVisits(@PathVariable Long patientId) {
         List<Map<String, Object>> history = new ArrayList<>();
 
-        // 1. Completed specialist appointments
+
         List<Appointment> completedAppointments = appointmentRepository
                 .findByPatientIdAndStatus(patientId, "COMPLETED");
 

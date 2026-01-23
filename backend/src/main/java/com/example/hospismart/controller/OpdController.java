@@ -263,7 +263,6 @@ public class OpdController {
                                 .body(Map.of("error", "Cannot cancel - ticket is already " + currentStatus.toLowerCase()));
                     }
 
-                    // Check if cancel is allowed (e.g., not too old)
                     if (ticket.getCreatedAt().isBefore(LocalDateTime.now().minusHours(1))) {
                         return ResponseEntity.badRequest()
                                 .body(Map.of("error", "Cannot cancel - ticket is more than 1 hour old"));

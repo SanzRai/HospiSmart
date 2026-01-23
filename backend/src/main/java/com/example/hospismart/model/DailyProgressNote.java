@@ -15,7 +15,6 @@ public class DailyProgressNote {
     private String doctorName;
     private LocalDateTime roundTime = LocalDateTime.now();
 
-    // Vitals
     private String bp;
     private String pulse;
     private String temp;

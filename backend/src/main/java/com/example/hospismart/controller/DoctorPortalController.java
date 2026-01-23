@@ -56,7 +56,6 @@ public class DoctorPortalController {
 
     @GetMapping("/queue/{doctorId}")
     public ResponseEntity<?> getDoctorQueue(@PathVariable Long doctorId) {
-        // Appointments for this doctor
         List<Appointment> appointments = appointmentRepository.findAll().stream()
                 .filter(a -> Objects.equals(a.getDoctorId(), doctorId))
                 .filter(a -> ("PAID".equalsIgnoreCase(a.getPaymentStatus()) || "CONFIRMED".equalsIgnoreCase(a.getStatus()))
@@ -64,7 +63,6 @@ public class DoctorPortalController {
                         && !"ABSENT".equalsIgnoreCase(a.getStatus()))
                 .collect(Collectors.toList());
 
-        // OPD tickets assigned to this doctor
         List<OpdTicket> opdTickets = opdRepository.findAll().stream()
                 .filter(t -> t.getAssignedDoctorId() != null && t.getAssignedDoctorId().equals(doctorId))
                 .filter(t -> "ASSIGNED".equalsIgnoreCase(t.getStatus()) ||
@@ -75,7 +73,6 @@ public class DoctorPortalController {
 
         List<Map<String, Object>> queue = new ArrayList<>();
 
-        // Add appointments
         for (Appointment apt : appointments) {
             Map<String, Object> map = new HashMap<>();
             map.put("id", apt.getId());
@@ -87,7 +84,6 @@ public class DoctorPortalController {
             queue.add(map);
         }
 
-        // Add OPD tickets
         for (OpdTicket t : opdTickets) {
             Map<String, Object> map = new HashMap<>();
             map.put("id", t.getId());
@@ -165,7 +161,6 @@ public class DoctorPortalController {
 
     @GetMapping("/ipd/patients")
     public ResponseEntity<?> getAdmittedPatients() {
-        // Returns list of patients currently occupying beds
         return ResponseEntity.ok(ipdPatientRepository.findAll());
     }
 

@@ -78,7 +78,7 @@ public class AdmissionController {
             IpdPatient ipdPatient = new IpdPatient();
             ipdPatient.setPatientId(request.getPatientId());
             ipdPatient.setPatientName(request.getPatientName());
-            ipdPatient.setUhid("UHID-" + request.getPatientId()); // or generate properly
+            ipdPatient.setUhid("UHID-" + request.getPatientId()); 
             ipdPatient.setWard(bed.getWard());
             ipdPatient.setBedNumber(bed.getBedNumber());
             ipdPatient.setAdmissionDate(LocalDate.now());

@@ -64,7 +64,6 @@ public class SsfService {
         try {
             Billing billing = new Billing();
 
-            // Generate beautiful receipt ID
             String today = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
             long count = billingRepository.count() + 1;
             String receiptId = "SSF-" + today + "-" + String.format("%04d", count);
@@ -80,7 +79,7 @@ public class SsfService {
                     rate.getSsfPrescribedRate());
 
             billing.setFinalAmount(finalAmount);
-            billing.setPaymentStatus("PENDING_SSF");  // Will be updated when patient pays
+            billing.setPaymentStatus("PENDING_SSF");  
             billing.setSsfId(ssfId);
             billing.setCreatedAt(LocalDateTime.now());
 

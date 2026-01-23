@@ -68,7 +68,6 @@ public class StaffAdminController extends AdminBaseController {
             return ResponseEntity.status(401).build();
 
         return repo.findById(id).map(existing -> {
-            // Update basic fields
             existing.setEmployeeId(updatedStaff.getEmployeeId());
             existing.setName(updatedStaff.getName());
             existing.setEmail(updatedStaff.getEmail());

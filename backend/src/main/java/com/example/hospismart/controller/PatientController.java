@@ -107,7 +107,6 @@ public class PatientController {
 
         return patientRepository.findById(id)
                 .map(existing -> {
-                    // Existing updates...
                     if (updatedPatient.getFullName() != null) {
                         existing.setFullName(updatedPatient.getFullName());
                     }
@@ -129,8 +128,6 @@ public class PatientController {
                     if (updatedPatient.getEmergencyContact() != null) {
                         existing.setEmergencyContact(updatedPatient.getEmergencyContact());
                     }
-
-                    // ADD THESE TWO LINES (this was missing!)
                     if (updatedPatient.getAllergies() != null) {
                         existing.setAllergies(updatedPatient.getAllergies());
                     }
