@@ -16,7 +16,7 @@ const API = "http://localhost:8080/api/admin/departments";
 const DepartmentManagement = () => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState(null); // { type: 'success'/'error', text: '...' }
+  const [message, setMessage] = useState(null); 
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);

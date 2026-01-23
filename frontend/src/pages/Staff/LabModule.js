@@ -20,7 +20,7 @@ const LabModule = ({ staffInfo }) => {
   const [pendingSamples, setPendingSamples] = useState([]);
   const [entryQueue, setEntryQueue] = useState([]);
   const [verificationQueue, setVerificationQueue] = useState([]);
-  const [testResults, setTestResults] = useState({}); // { sampleId: { paramName: value } }
+  const [testResults, setTestResults] = useState({}); 
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [toast, setToast] = useState(null);

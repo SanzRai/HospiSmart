@@ -5,7 +5,7 @@
   scroll-behavior: smooth;
 }
 
-/* Hero Section */
+
 .about-hero {
   display: flex;
   flex-wrap: wrap;
@@ -13,7 +13,7 @@
   align-items: center;
   padding: 60px 10%;
   gap: 30px;
-  background-color: #f9fafb; /* same background for consistency */
+  background-color: #f9fafb; 
 }
 
 .about-text {
@@ -46,13 +46,13 @@
   box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 }
 
-/* Mission, Vision, Values */
+
 .about-mission,
 .about-vision,
 .about-values {
   padding: 50px 10%;
   text-align: center;
-  background-color: #f9fafb; /* same background for consistency */
+  background-color: #f9fafb; 
 }
 
 .about-mission h2,
@@ -95,7 +95,7 @@
 }
 
 .value-card h3 {
-  color: #FF7043; /* accent color */
+  color: #FF7043; 
   margin-bottom: 10px;
   font-size: 1.4rem;
 }
@@ -106,7 +106,6 @@
   line-height: 1.6;
 }
 
-/* Responsive adjustments */
 @media (max-width: 1024px) {
   .about-hero {
     padding: 50px 8%;

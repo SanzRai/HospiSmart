@@ -227,7 +227,6 @@ const Payment = () => {
 
           <h3>Payment Type</h3>
           <div className="options">
-            {/* Only show relevant options */}
             {discountsAllowed ? (
               ["SELF", "SSF", "INSURANCE", "STAFF"].map((type) => (
                 <button
@@ -249,18 +248,6 @@ const Payment = () => {
             )}
           </div>
 
-          {/* All discount sections are hidden when discounts not allowed */}
-          {discountsAllowed && paymentType === "SSF" && (
-            <> {/* Existing SSF input and feedback */} </>
-          )}
-
-          {discountsAllowed && paymentType === "INSURANCE" && (
-            <> {/* Existing Insurance feedback */} </>
-          )}
-
-          {discountsAllowed && paymentType === "STAFF" && (
-            <> {/* Existing Staff verification */} </>
-          )}
 
           <br />
 

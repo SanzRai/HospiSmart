@@ -333,7 +333,7 @@ const DoctorManagement = () => {
         </table>
       </div>
 
-      {/* Create/Edit Modal */}
+ 
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
           <div className="modal large" onClick={e => e.stopPropagation()}>
@@ -476,7 +476,7 @@ const DoctorManagement = () => {
         </div>
       )}
 
-      {/* Simple View Modal */}
+
       {selectedDoctor && (
         <div className="modal-overlay" onClick={() => setSelectedDoctor(null)}>
           <div className="modal simple-view" onClick={e => e.stopPropagation()}>

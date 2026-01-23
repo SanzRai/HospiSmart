@@ -49,7 +49,7 @@ const Appointment = () => {
       })
       .then((data) => {
         setDepartments(data);
-        console.log("Departments loaded:", data); // Debug: Check if departments are fetched
+        console.log("Departments loaded:", data); 
       })
       .catch((err) => {
         console.error(err);
@@ -123,7 +123,7 @@ const Appointment = () => {
         .then((data) => {
           if (Array.isArray(data)) {
             setDoctors(data);
-            console.log("Doctors loaded for dept:", deptId, data); // Debug
+            console.log("Doctors loaded for dept:", deptId, data); 
           } else {
             setDoctors([]);
           }
@@ -224,7 +224,6 @@ const Appointment = () => {
       status: "PENDING",
     };
 
-    // DEBUG LOG - This will show you exactly what is being sent
     console.log("DEBUG - Payload being sent to Payment page:", {
       selectedDeptId: appointmentDetails.departmentId,
       selectedDocId: appointmentDetails.doctorId,

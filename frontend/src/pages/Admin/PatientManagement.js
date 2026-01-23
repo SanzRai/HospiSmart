@@ -16,7 +16,7 @@ const API = "http://localhost:8080/api/admin/patients";
 const PatientManagement = () => {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState(null); // { type: 'success'/'error', text: '...' }
+  const [message, setMessage] = useState(null); 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -296,7 +296,6 @@ const PatientManagement = () => {
         </table>
       </div>
 
-      {/* Simple Patient Details Modal */}
       {selectedPatient && (
         <div className="modal-overlay" onClick={() => setSelectedPatient(null)}>
           <div className="modal simple-view" onClick={e => e.stopPropagation()}>

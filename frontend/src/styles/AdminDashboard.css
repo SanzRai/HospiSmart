@@ -169,7 +169,7 @@
   margin-left: 72px;
 }
 
-/* Responsive - auto-collapse on smaller screens */
+
 @media (max-width: 1024px) {
   .sidebar {
     width: 72px !important;

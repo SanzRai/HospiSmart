@@ -101,7 +101,7 @@
   margin: 0;
 }
 
-/* Controls */
+
 .controls {
   display: flex;
   justify-content: space-between;
@@ -459,7 +459,7 @@ tr:hover {
   font-weight: 600;
 }
 
-/* Toggle Button Styles */
+
 .action-btn.toggle.deactivate {
   background: #fee2e2;
   color: #b91c1c;
@@ -497,20 +497,19 @@ tr:hover {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
 }
 
-/* Specific colors for each type */
 .stat-card.total {
-  border-left-color: var(--primary-color); /* Blue */
+  border-left-color: var(--primary-color); 
 }
 
 .stat-card.active {
-  border-left-color: var(--success-color); /* Green */
+  border-left-color: var(--success-color); 
 }
 
 .stat-card.inactive {
-  border-left-color: var(--alert-critical); /* Red */
+  border-left-color: var(--alert-critical);
 }
 
-/* Common text styles */
+
 .stat-card strong {
   font-size: 2.5rem;
   font-weight: 900;
@@ -538,15 +537,14 @@ tr:hover {
 }
 
 
-/* Responsive */
+
 @media (max-width: 1024px) {
   .stats-grid {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
 }
 
-/* Insurance module */
-/* Message Box (Success/Error) */
+
 .message-box {
   padding: 1rem 1.5rem;
   border-radius: 10px;
@@ -570,7 +568,7 @@ tr:hover {
   border-left: 5px solid #ef4444;
 }
 
-/* Simple View Modal */
+
 .simple-view {
   max-width: 520px;
   padding: 1.8rem;
@@ -606,9 +604,9 @@ tr:hover {
   margin-top: 1rem;
 }
 
-/* Patient-specific stat cards */
+
 .stat-card.blacklisted {
-  border-left-color: var(--warning-color); /* Orange/Yellow warning */
+  border-left-color: var(--warning-color); 
 }
 
 .stat-card.blacklisted strong {
@@ -616,7 +614,7 @@ tr:hover {
 }
 
 .stat-card.ssf {
-  border-left-color: #8b5cf6; /* Purple for SSF */
+  border-left-color: #8b5cf6; 
 }
 
 .stat-card.ssf strong {
@@ -624,16 +622,16 @@ tr:hover {
 }
 
 .stat-card.insurance {
-  border-left-color: #059669; /* Green for insurance */
+  border-left-color: #059669; 
 }
 
 .stat-card.insurance strong {
   color: #059669;
 }
 
-/* Blacklisted row highlight */
+
 .blacklisted-row {
-  background-color: #fff3e0 !important; /* Very light orange */
+  background-color: #fff3e0 !important; 
   font-weight: 500;
 }
 
@@ -641,14 +639,13 @@ tr:hover {
   background-color: #ffe0b2 !important;
 }
 
-/* Flag icon for blacklisted */
+
 .flag {
   color: #f59e0b;
   margin-left: 8px;
   font-size: 1.1rem;
 }
 
-/* Extra action buttons styling (blacklist/unblacklist + reset password) */
 .action-btn.ban {
   background: #fee2e2;
   color: #b91c1c;
@@ -676,9 +673,7 @@ tr:hover {
   background: #bae6fd;
 }
 
-/* ────────────────────────────────────────────────
-   Settings Page – Consistency Fixes
-───────────────────────────────────────────────── */
+
 
 .settings-page .header-bar h1 {
   font-size: 2.1rem;

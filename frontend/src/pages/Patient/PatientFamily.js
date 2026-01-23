@@ -30,11 +30,9 @@ const PatientFamily = () => {
   const [deletingId, setDeletingId] = useState(null);
   const [toast, setToast] = useState(null);
   
-  // Delete confirmation
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState(null);
 
-  // Notifications (same approach as in Book Appointment page)
   const [notifications, setNotifications] = useState([]);
 
   const token = localStorage.getItem('token');
@@ -69,7 +67,6 @@ const PatientFamily = () => {
       }
     };
 
-    // Set some helpful notifications (you can fetch them later if needed)
     setNotifications([
       {
         id: 'fam-1',
@@ -186,7 +183,6 @@ const PatientFamily = () => {
 
   return (
     <div className="patient-module">
-      {/* Updated Navbar with notifications support */}
       <PatientNavbar 
         patientInfo={{ name: patientName }}
         notifications={notifications}
@@ -195,7 +191,6 @@ const PatientFamily = () => {
       />
 
       <main className="family-page patient-container">
-        {/* Toast Notification */}
         <AnimatePresence>
           {toast && (
             <motion.div 
@@ -288,7 +283,6 @@ const PatientFamily = () => {
         </button>
       </main>
 
-      {/* Emergency Floating Button - same as in appointment page */}
       <motion.button 
         className="emergency-button"
         whileHover={{ scale: 1.12 }}
@@ -299,7 +293,6 @@ const PatientFamily = () => {
         <FaPhone />
       </motion.button>
 
-      {/* Add Member Modal */}
       <AnimatePresence>
         {showAddModal && (
           <motion.div className="payment-modal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -375,7 +368,6 @@ const PatientFamily = () => {
         )}
       </AnimatePresence>
 
-      {/* Delete Confirmation Modal */}
       <AnimatePresence>
         {showConfirmDelete && (
           <motion.div 

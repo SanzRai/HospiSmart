@@ -89,10 +89,9 @@ const PatientDashboard = () => {
               aptDate >= today &&
               status !== 'completed' &&
               status !== 'absent' &&
-              status !== 'cancelled' &&        // ← Exclude cancelled
-              status !== 'canceled'            // ← Also handle possible spelling variation
+              status !== 'cancelled' &&        
+              status !== 'canceled'           
             );
-            // Note: rescheduled is NOT excluded → rescheduled future appointments are included
           })
           .sort((a, b) => {
             const dateA = new Date(a.appointmentDate || a.bookedAt || today);
@@ -263,7 +262,6 @@ const PatientDashboard = () => {
           </div>
         </motion.div>
 
-        {/* Quick Actions */}
         <div className="quick-actions-grid">
           {quickActions.map((action, index) => (
             <motion.div
@@ -285,7 +283,6 @@ const PatientDashboard = () => {
           ))}
         </div>
 
-        {/* Upcoming Appointments - Limited view */}
         <motion.div 
           className="section-card"
           initial={{ opacity: 0 }}
@@ -336,7 +333,6 @@ const PatientDashboard = () => {
           )}
         </motion.div>
 
-        {/* Notifications */}
         <motion.div 
           className="section-card"
           initial={{ opacity: 0 }}

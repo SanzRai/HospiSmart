@@ -26,7 +26,6 @@ const PatientHome = ({ patientInfo, setActiveView }) => {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch upcoming appointments
       const aptRes = await fetch(`${API_BASE_URL}/patient-portal/appointments/${patientInfo.id}`);
       if (aptRes.ok) {
         const apts = await aptRes.json();
@@ -37,7 +36,6 @@ const PatientHome = ({ patientInfo, setActiveView }) => {
         }
       }
 
-      // Fetch prescriptions
       const rxRes = await fetch(`${API_BASE_URL}/patient-portal/prescriptions/${patientInfo.id}`);
       if (rxRes.ok) {
         const prescriptions = await rxRes.json();
@@ -45,7 +43,6 @@ const PatientHome = ({ patientInfo, setActiveView }) => {
         setStats(prev => ({ ...prev, activePrescriptions: prescriptions.length }));
       }
 
-      // Fetch pending reports
       const labRes = await fetch(`${API_BASE_URL}/lab/patient/${patientInfo.id}/reports`);
       if (labRes.ok) {
         const labs = await labRes.json();
@@ -53,7 +50,6 @@ const PatientHome = ({ patientInfo, setActiveView }) => {
         setStats(prev => ({ ...prev, pendingReports: pending.length }));
       }
 
-      // Check queue status (live tracking)
       const queueRes = await fetch(`${API_BASE_URL}/patient-portal/queue-status/${patientInfo.id}`);
       if (queueRes.ok) {
         setQueueStatus(await queueRes.json());
@@ -81,7 +77,6 @@ const PatientHome = ({ patientInfo, setActiveView }) => {
 
   return (
     <div className="patient-home">
-      {/* Welcome Section */}
       <div className="welcome-section">
         <div className="welcome-text">
           <h1>Welcome back, {patientInfo.fullName?.split(" ")[0] || "Patient"}! 👋</h1>
@@ -92,7 +87,6 @@ const PatientHome = ({ patientInfo, setActiveView }) => {
         </div>
       </div>
 
-      {/* Quick Actions */}
       <div className="quick-actions">
         {quickActions.map((action, i) => (
           <button key={i} className="quick-action-card" onClick={action.action} style={{ "--accent": action.color }}>
@@ -102,7 +96,6 @@ const PatientHome = ({ patientInfo, setActiveView }) => {
         ))}
       </div>
 
-      {/* Live Queue Status */}
       {queueStatus && queueStatus.inQueue && (
         <div className="queue-status-card">
           <div className="queue-icon"><FaClock /></div>
@@ -114,7 +107,6 @@ const PatientHome = ({ patientInfo, setActiveView }) => {
         </div>
       )}
 
-      {/* Stats Cards */}
       <div className="stats-grid">
         <div className="stat-card blue" onClick={() => setActiveView("appointments")}>
           <div className="stat-icon"><FaCalendarCheck /></div>
@@ -147,7 +139,6 @@ const PatientHome = ({ patientInfo, setActiveView }) => {
       </div>
 
       <div className="home-grid">
-        {/* Upcoming Appointment */}
         <div className="home-card upcoming-apt">
           <div className="card-header">
             <h3><FaCalendarCheck /> Next Appointment</h3>
@@ -177,7 +168,6 @@ const PatientHome = ({ patientInfo, setActiveView }) => {
           </div>
         </div>
 
-        {/* Health Summary */}
         <div className="home-card health-summary">
           <div className="card-header">
             <h3><FaHeartbeat /> Health Summary</h3>
@@ -205,7 +195,6 @@ const PatientHome = ({ patientInfo, setActiveView }) => {
           </div>
         </div>
 
-        {/* Recent Prescriptions */}
         <div className="home-card prescriptions-card">
           <div className="card-header">
             <h3><FaPills /> Recent Prescriptions</h3>
@@ -232,7 +221,6 @@ const PatientHome = ({ patientInfo, setActiveView }) => {
           </div>
         </div>
 
-        {/* Emergency Contact */}
         <div className="home-card emergency-card">
           <div className="card-header">
             <h3><FaPhoneAlt /> Emergency</h3>

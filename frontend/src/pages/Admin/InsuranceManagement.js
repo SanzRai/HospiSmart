@@ -288,7 +288,6 @@ const InsuranceManagement = () => {
         </table>
       </div>
 
-      {/* Add/Edit Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal large" onClick={e => e.stopPropagation()}>
@@ -348,7 +347,7 @@ const InsuranceManagement = () => {
         </div>
       )}
 
-      {/* Simple View Modal */}
+ 
       {selectedInsurance && (
         <div className="modal-overlay" onClick={() => setSelectedInsurance(null)}>
           <div className="modal simple-view" onClick={e => e.stopPropagation()}>

@@ -51,15 +51,13 @@ const PatientPayment = () => {
 
   const token = localStorage.getItem("token");
 
-  // Fee from details (consultation or lab fee)
   const fee = details ? Number(details.consultingFee || details.amount) || 0 : 0;
 
-  // Detect if this is OPD/Appointment or Lab/Other
   const bookingType = details?.bookingType || "BILL";
   const isOpdOrAppointment = ["OPD", "APPOINTMENT"].includes(bookingType.toUpperCase());
   const isLabPayment = details?.type === "LAB_TEST";
 
-  // Discounts are ONLY allowed for lab payments (or non-OPD bookings)
+
   const discountsAllowed = isLabPayment;
 
   useEffect(() => {
@@ -249,7 +247,6 @@ const PatientPayment = () => {
       const data = await res.json();
       const receipt = data.receiptId;
 
-      // Special handling for lab payments
       if (details.type === "LAB_TEST") {
         await fetch(`${API_BASE_URL}/billing/pay-lab`, {
           method: "POST",

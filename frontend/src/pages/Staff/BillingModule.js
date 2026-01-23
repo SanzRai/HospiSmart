@@ -86,12 +86,11 @@ const BillingModule = ({ staffInfo }) => {
 
 const fetchInsuredPatients = async () => {
   try {
-    const res = await fetch(`${API_BASE_URL}/patients`, {  // ← change to /patients
+    const res = await fetch(`${API_BASE_URL}/patients`, { 
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     });
     if (res.ok) {
       const allPatients = await res.json();
-      // Filter in frontend (less efficient, but works if you don't want to change backend)
       const insured = allPatients.filter(p => p.insuranceProviderId != null);
       setInsuredPatients(insured);
     } else {
@@ -232,7 +231,7 @@ const fetchInsuredPatients = async () => {
   };
 
   const handleAdminVerify = () => {
-    if (adminPassword === "admin123") {  // ← Change this in production!
+    if (adminPassword === "admin123") {  
       setShowAdminAuth(false);
       setAdminPassword("");
       handleProcessPayment();

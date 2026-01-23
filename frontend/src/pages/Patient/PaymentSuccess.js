@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { FaCheckCircle, FaArrowLeft } from "react-icons/fa";
-import "../../styles/Payment.css"; // Reuse same CSS
+import "../../styles/Payment.css"; 
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -39,7 +39,6 @@ const PaymentSuccess = () => {
         setBookingMessage(
           `Payment successful! Your ${result.bookingType === "OPD" ? "OPD Ticket" : "Appointment"} is confirmed.`
         );
-        // Auto-redirect after 5 seconds
         setTimeout(() => navigate("/"), 5000);
       } else {
         setMessage("Verification Failed: " + (result.message || "Unknown error"));
@@ -54,7 +53,6 @@ const PaymentSuccess = () => {
       <Navbar />
 
       <main className="payment-container">
-        {/* Back button - consistent with other pages */}
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -109,7 +107,7 @@ const PaymentSuccess = () => {
 
             <button
               onClick={() => navigate("/")}
-              className="submit-btn" // Reuse orange button style from Appointment/Payment
+              className="submit-btn"
               style={{ maxWidth: "300px" }}
             >
               Go to Homepage Now

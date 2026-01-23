@@ -35,7 +35,6 @@ const PatientAppointment = () => {
   const [availableSlots, setAvailableSlots] = useState([]);
   const [doctorIdMap, setDoctorIdMap] = useState({});
 
-  // Add notifications state (same as dashboard)
   const [notifications, setNotifications] = useState([]);
 
   const patientPhone = localStorage.getItem("patientPhone");
@@ -98,7 +97,6 @@ const PatientAppointment = () => {
         setDoctorIdMap(map);
       }
 
-      // Optional: Add simple notifications (you can expand this later)
       setNotifications([
         { id: 'info-1', type: 'info', title: 'Appointment Tips', message: 'Arrive 15 minutes early', icon: FaClock }
       ]);
@@ -347,7 +345,6 @@ const PatientAppointment = () => {
           </motion.div>
         )}
 
-        {/* Cancel Modal */}
         {showCancelModal && (
           <div className="modal-overlay">
             <div className="modal-content">
@@ -374,7 +371,6 @@ const PatientAppointment = () => {
           </div>
         )}
 
-        {/* Reschedule Modal */}
         {showRescheduleModal && selectedRescheduleApt && (
           <div className="modal-overlay">
             <div className="modal-content" style={{ maxWidth: "500px" }}>
@@ -452,7 +448,6 @@ const PatientAppointment = () => {
         )}
       </main>
 
-      {/* Floating Emergency Button - same as dashboard */}
       <motion.button 
         className="emergency-button"
         whileHover={{ scale: 1.12 }}

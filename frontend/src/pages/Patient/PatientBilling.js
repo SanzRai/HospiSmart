@@ -22,11 +22,10 @@ const PatientBilling = () => {
   const role = localStorage.getItem("userRole");
   const patientId = Number(localStorage.getItem("patientId"));
 
-  // Get patient info from localStorage
+
   const patientInfo = JSON.parse(localStorage.getItem("patientInfo") || "{}");
   const patientName = patientInfo.fullName || patientInfo.name || patientInfo.full_name || "Patient";
 
-  // Toast notification helper
   const showToast = (type, message) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 4000);
@@ -58,7 +57,6 @@ const PatientBilling = () => {
       setLoading(true);
       setError(null);
 
-      // Pending bills (now includes lab tests)
       const pendingRes = await fetch(
         `${API_BASE_URL}/billing/pending?patientId=${patientId}`,
         {
@@ -77,7 +75,6 @@ const PatientBilling = () => {
       const pendingData = await pendingRes.json();
       setPendingBills(Array.isArray(pendingData) ? pendingData : []);
 
-      // Paid bills
       const paidRes = await fetch(
         `${API_BASE_URL}/billing/paid?patientId=${patientId}`,
         {
@@ -96,7 +93,6 @@ const PatientBilling = () => {
       const paidData = await paidRes.json();
       setPaidBills(Array.isArray(paidData) ? paidData : []);
 
-      // Update notifications based on pending bills
       const pendingCount = pendingData.length;
       setNotifications([
         {
@@ -141,7 +137,6 @@ const PatientBilling = () => {
       />
 
       <main className="billing-page patient-container">
-        {/* Toast Notification */}
         <AnimatePresence>
           {toast && (
             <motion.div
@@ -261,7 +256,6 @@ const PatientBilling = () => {
         )}
       </main>
 
-      {/* Floating Emergency Button */}
       <motion.button
         className="emergency-button"
         whileHover={{ scale: 1.12 }}

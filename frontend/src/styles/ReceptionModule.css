@@ -23,7 +23,6 @@
   color: #1e293b;
 }
 
-/* Header & Tabs */
 .module-header h2 {
   font-size: 1.9rem;
   font-weight: 700;
@@ -68,7 +67,6 @@
   font-weight: 700;
 }
 
-/* Toast */
 .toast {
   position: fixed;
   top: 24px;
@@ -85,10 +83,9 @@
   min-width: 320px;
 }
 
-.toast.success { background: var(--success), color(white); }
-.toast.error   { background: var(--danger), color(white); }
+.toast.success { background: var(--success); color: white; }
+.toast.error   { background: var(--danger); color: white; }
 
-/* Tab Content Wrapper */
 .tab-content {
   background: var(--surface);
   border-radius: var(--radius-lg);
@@ -96,7 +93,6 @@
   box-shadow: var(--shadow-md);
 }
 
-/* Search Section */
 .search-section h3 {
   font-size: 1.35rem;
   color: var(--primary);
@@ -145,7 +141,6 @@
   font-weight: 500;
 }
 
-/* Patient Card after search */
 .patient-card {
   margin-top: 1.6rem;
   padding: 1.6rem;
@@ -206,7 +201,6 @@
   background: #e65c32;
 }
 
-/* Forms */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -282,7 +276,6 @@
   font-weight: 500;
 }
 
-/* Roster */
 .roster-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -323,8 +316,6 @@
   color: var(--muted);
 }
 
-/* Modern Professional Tables (Recent Tickets + Online Bookings) */
-/* ───────────── Recent Tickets Table ───────────── */
 .tickets-table {
   width: 100%;
   border-collapse: separate;
@@ -368,7 +359,6 @@
   transform: translateY(-1px);
 }
 
-/* ───────────── Status Column ───────────── */
 .tickets-table .status-badge {
   display: inline-flex;
   align-items: center;
@@ -382,7 +372,6 @@
   text-transform: capitalize;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
-
 
 .tickets-table .status-badge.issued {
   background: #d1fae5;
@@ -403,7 +392,7 @@
 
 .tickets-table .status-badge.paid::before,
 .tickets-table .status-badge.confirmed::before {
-  content: "\f00c"; /* check */
+  content: "\f00c";
   font-family: "Font Awesome 5 Free";
   font-weight: 900;
 }
@@ -415,13 +404,12 @@
 }
 
 .tickets-table .status-badge.pending::before {
-  content: "\f071"; /* FaExclamationTriangle */
+  content: "\f071";
   font-family: "Font Awesome 5 Free";
   font-weight: 900;
 }
 
-/* ───────────── Doctor Column ───────────── */
-.tickets-table td:nth-child(4) {  /* Doctor column */
+.tickets-table td:nth-child(4) {
   font-weight: 500;
   color: #1e293b;
 }
@@ -436,7 +424,7 @@
 }
 
 .tickets-table td:nth-child(4):contains("Pending")::before {
-  content: "\f110"; /* spinner / pending icon */
+  content: "\f110";
   font-family: "Font Awesome 5 Free";
   font-weight: 900;
   position: absolute;
@@ -444,59 +432,12 @@
   color: #d97706;
 }
 
-/* Make Token column bold & prominent */
 .tickets-table td:first-child strong {
   font-size: 1.15rem;
   color: #1976d2;
   letter-spacing: 0.5px;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .tickets-table th,
-  .tickets-table td {
-    padding: 1rem 1.1rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .tickets-table {
-    font-size: 0.92rem;
-  }
-
-  .tickets-table thead {
-    display: none;
-  }
-
-  .tickets-table tr {
-    display: block;
-    margin-bottom: 1.2rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    overflow: hidden;
-  }
-
-  .tickets-table td {
-    display: flex;
-    justify-content: space-between;
-    border: none;
-    padding: 0.9rem 1.2rem;
-    border-bottom: 1px solid #f1f5f9;
-  }
-
-  .tickets-table td:last-child {
-    border-bottom: none;
-  }
-
-  .tickets-table td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: #475569;
-    margin-right: 1rem;
-    flex: 0 0 40%;
-  }
-}
-/* Booking Section Container */
 .booking-section {
   margin: 2.5rem 0;
   background: white;
@@ -515,45 +456,6 @@
   border-bottom: 2px solid #e2e8f0;
 }
 
-/* Modern Table Styling */
-.tickets-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: 0.98rem;
-}
-
-.tickets-table thead {
-  background: #f8fafc;
-  border-bottom: 2px solid #cbd5e1;
-}
-
-.tickets-table th {
-  padding: 1.1rem 1.3rem;
-  text-align: left;
-  font-weight: 600;
-  color: #1976d2;
-  font-size: 0.92rem;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-}
-
-.tickets-table td {
-  padding: 1.1rem 1.3rem;
-  vertical-align: middle;
-  border-bottom: 1px solid #f1f5f9;
-  color: #334155;
-}
-
-.tickets-table tbody tr {
-  transition: background 0.15s ease;
-}
-
-.tickets-table tbody tr:hover {
-  background: #f8fafc;
-}
-
-/* Action Buttons in Table */
 .tickets-table .pay-btn,
 .tickets-table .issue-btn {
   display: inline-flex;
@@ -570,9 +472,8 @@
   min-width: 90px;
 }
 
-/* Mark Paid Button */
 .tickets-table .pay-btn {
-  background: #10b981; /* green */
+  background: #10b981;
   color: white;
   box-shadow: 0 3px 10px rgba(16,185,129,0.25);
 }
@@ -583,7 +484,6 @@
   box-shadow: 0 6px 14px rgba(16,185,129,0.35);
 }
 
-/* Issue Ticket Button */
 .tickets-table .issue-btn {
   background: var(--action);
   color: white;
@@ -591,19 +491,16 @@
 }
 
 .tickets-table .issue-btn:hover {
-  background: #ea580c; /* darker orange */
+  background: #ea580c;
   transform: translateY(-2px);
   box-shadow: 0 6px 14px rgba(249,115,22,0.35);
 }
 
-/* Small Variant */
 .tickets-table .small {
   font-size: 0.9rem;
   padding: 0.6rem 0.70rem;
 }
 
-
-/* Status Badges */
 .status-badge {
   padding: 0.45rem 1rem;
   border-radius: 999px;
@@ -630,7 +527,6 @@
   color: #991b1b;
 }
 
-/* Mark Paid Button - Modern & Attractive */
 .pay-btn.small {
   display: inline-flex;
   align-items: center;
@@ -658,30 +554,10 @@
   box-shadow: 0 2px 6px rgba(5, 150, 105, 0.2);
 }
 
-/* Small icon inside button */
 .pay-btn.small svg {
   font-size: 1.1rem;
 }
 
-/* Responsive tweaks */
-@media (max-width: 1024px) {
-  .tickets-table th,
-  .tickets-table td {
-    padding: 0.9rem 1rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .tickets-table {
-    font-size: 0.92rem;
-  }
-
-  .pay-btn.small {
-    padding: 0.55rem 1rem;
-    font-size: 0.9rem;
-  }
-}
-/* Modal */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -724,7 +600,6 @@
   font-size: 1.7rem;
   font-weight: 900;
   color: var(--primary);
-  
 }
 
 .ticket-number {
@@ -774,36 +649,6 @@
   border: none;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 768px) {
-  .module-tabs {
-    flex-direction: column;
-    gap: 0.4rem;
-  }
-
-  .module-tabs button {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .tickets-table th,
-  .tickets-table td {
-    padding: 0.9rem;
-    font-size: 0.92rem;
-  }
-}
-
-/* ─────────────────────────────────────────────
-   Registration & OPD Ticket Forms 
-   ───────────────────────────────────────────── */
-
-
 .registration-form,
 .ticket-form {
   background: #ffffff;
@@ -812,7 +657,6 @@
   box-shadow: var(--shadow-md);
   border: 1px solid var(--border);
 }
-
 
 .registration-form h3,
 .ticket-form h3 {
@@ -826,7 +670,6 @@
   border-bottom: 2px solid var(--border);
   padding-bottom: 0.8rem;
 }
-
 
 .selected-patient {
   background: #f1f5f9;
@@ -842,7 +685,6 @@
   flex-wrap: wrap;
   gap: 0.6rem;
 }
-
 
 .selected-patient .badge {
   padding: 0.3rem 0.75rem;
@@ -861,17 +703,14 @@
   color: #065f46;
 }
 
-
 .ticket-form textarea {
   resize: vertical;
   min-height: 110px;
 }
 
-
 .form-group.full-width {
   grid-column: 1 / -1;
 }
-
 
 .ticket-form .checkbox-label {
   background: #f8fafc;
@@ -882,7 +721,6 @@
   color: #1f2937;
 }
 
-/* Primary action buttons (Register & Issue) */
 .registration-form .primary-btn,
 .ticket-form .primary-btn {
   margin-top: 2.2rem;
@@ -893,7 +731,6 @@
   background: linear-gradient(135deg, var(--action), #fb923c);
   box-shadow: 0 8px 20px rgba(249, 115, 22, 0.35);
 }
-
 
 .registration-form .primary-btn:hover:not(:disabled),
 .ticket-form .primary-btn:hover:not(:disabled) {
@@ -913,8 +750,68 @@
   box-shadow: none;
 }
 
+@media (max-width: 1024px) {
+  .tickets-table th,
+  .tickets-table td {
+    padding: 1rem 1.1rem;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 @media (max-width: 768px) {
+  .tickets-table {
+    font-size: 0.92rem;
+  }
+
+  .tickets-table thead {
+    display: none;
+  }
+
+  .tickets-table tr {
+    display: block;
+    margin-bottom: 1.2rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .tickets-table td {
+    display: flex;
+    justify-content: space-between;
+    border: none;
+    padding: 0.9rem 1.2rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .tickets-table td:last-child {
+    border-bottom: none;
+  }
+
+  .tickets-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #475569;
+    margin-right: 1rem;
+    flex: 0 0 40%;
+  }
+
+  .module-tabs {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .module-tabs button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pay-btn.small {
+    padding: 0.55rem 1rem;
+    font-size: 0.9rem;
+  }
+
   .registration-form,
   .ticket-form {
     padding: 1.6rem 1.4rem 2rem;

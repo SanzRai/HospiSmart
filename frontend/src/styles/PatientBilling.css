@@ -1,4 +1,3 @@
-/* PATIENT BILLING - Professional Hospital Billing Style (Consistent with Family/Records/Queue) */
 .billing-page {
   --primary: #0ea5e9;
   --primary-dark: #0369a1;
@@ -24,9 +23,6 @@
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-
-
-/* Page Header - Hospital Professional Look */
 .page-header {
   text-align: center;
   margin-bottom: 3.2rem;
@@ -50,9 +46,8 @@
   margin-inline: auto;
 }
 
-/* Billing Summary Card - Key Info Highlight */
 .billing-summary-card {
-  background:var(--surface);
+  background: var(--surface);
   border-radius: var(--radius);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-card);
@@ -60,6 +55,7 @@
   text-align: center;
   margin-bottom: 3rem;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
+  position: relative;
 }
 
 .billing-summary-card::before {
@@ -70,6 +66,7 @@
   right: 0;
   height: 5px;
   background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  border-radius: var(--radius) var(--radius) 0 0;
 }
 
 .billing-summary-card:hover {
@@ -120,21 +117,6 @@
   margin-top: 1rem;
 }
 
-@media (max-width: 768px) {
-  .billing-summary-card {
-    padding: 1.8rem 1.6rem;
-  }
-
-  .billing-summary-card .amount {
-    font-size: 2.4rem;
-  }
-
-  .billing-summary-card h2 {
-    font-size: 1.3rem;
-  }
-}
-
-/* Tabs - Clean & Modern */
 .tabs-list {
   display: flex;
   justify-content: center;
@@ -168,7 +150,6 @@
   transform: translateY(-1px);
 }
 
-/* Bill Item - Realistic Hospital Bill Card */
 .bill-item {
   background: var(--surface);
   border-radius: var(--radius);
@@ -220,7 +201,6 @@
   color: var(--text-secondary);
 }
 
-/* Pay Now Button - Strong Orange Call-to-Action */
 .btn.btn-action {
   background: var(--accent);
   color: white;
@@ -244,7 +224,6 @@
   box-shadow: 0 12px 32px rgba(249,115,22,0.45);
 }
 
-/* No Data State */
 .no-data {
   text-align: center;
   padding: 7rem 2rem;
@@ -259,7 +238,6 @@
   margin: 2rem auto;
 }
 
-/* Toast - Consistent Across All Pages */
 .toast {
   position: fixed;
   top: 24px;
@@ -280,7 +258,6 @@
 .toast.success { border-left-color: var(--success); color: var(--success); }
 .toast.error   { border-left-color: var(--danger); color: var(--danger); }
 
-/* Responsive */
 @media (max-width: 768px) {
   .billing-page {
     padding: 28px 16px;

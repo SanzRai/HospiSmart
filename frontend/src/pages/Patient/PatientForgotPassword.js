@@ -113,7 +113,7 @@ const PatientForgotPassword = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setIsSuccess(true); // Show success screen
+        setIsSuccess(true); 
       } else {
         setError(data.message || "Failed to reset password. Please try again.");
       }
@@ -206,7 +206,6 @@ const PatientForgotPassword = () => {
               </p>
             </div>
 
-            {/* Step 1: Phone Number */}
             {step === 1 && (
               <form onSubmit={handleSendOTP} className="auth-form">
                 <div className="form-group">
@@ -239,7 +238,6 @@ const PatientForgotPassword = () => {
               </form>
             )}
 
-            {/* Step 2: OTP Verification */}
             {step === 2 && (
               <form onSubmit={handleVerifyOTP} className="auth-form">
                 <div className="form-group">
@@ -274,7 +272,6 @@ const PatientForgotPassword = () => {
               </form>
             )}
 
-            {/* Step 3: Reset Password with Eye Icons */}
             {step === 3 && (
               <form onSubmit={handleResetPassword} className="auth-form">
                 <div className="form-group password-group">

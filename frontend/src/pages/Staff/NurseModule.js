@@ -23,7 +23,7 @@ const API_BASE_URL = "http://localhost:8080/api";
 const NurseModule = ({ staffInfo }) => {
   const [activeTab, setActiveTab] = useState("assign");
   const [opdQueue, setOpdQueue] = useState([]);
-  const [expandedFor, setExpandedFor] = useState(null); // patient.id that is currently expanded
+  const [expandedFor, setExpandedFor] = useState(null); 
 
   const [vitals, setVitals] = useState({
     bloodPressure: "",
@@ -145,7 +145,7 @@ const NurseModule = ({ staffInfo }) => {
     } catch (err) {}
   };
 
-  // ── Vitals Handlers ─────────────────────────────────────────────
+ 
   const startRecordingVitals = (patient) => {
     setExpandedFor(patient.id);
     setVitals({
@@ -197,7 +197,6 @@ const NurseModule = ({ staffInfo }) => {
     }
   };
 
-  // ── Assign Doctor Handlers ──────────────────────────────────────
   const startAssignDoctor = (patient) => {
     setExpandedFor(patient.id);
     setAssignmentForm({ departmentId: patient.departmentId || "", doctorId: "" });
@@ -399,7 +398,6 @@ const NurseModule = ({ staffInfo }) => {
         </button>
       </div>
 
-      {/* ── ASSIGN DOCTOR TAB ──────────────────────────────────────────────── */}
       {activeTab === "assign" && (
         <motion.div className="tab-content" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <h3>Assign Doctor to Patients</h3>
@@ -435,7 +433,6 @@ const NurseModule = ({ staffInfo }) => {
                     </button>
                   </div>
 
-                  {/* Assignment Form - appears below the selected patient */}
                   <AnimatePresence>
                     {isExpanded && activeTab === "assign" && (
                       <motion.div

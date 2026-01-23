@@ -639,7 +639,6 @@
   color: var(--dm-primary);
 }
 
-/* ───────────── Add Daily Note Form ───────────── */
 .doctor-module-container .progress-section {
   margin-top: 1.5rem;
 }
@@ -688,7 +687,6 @@
   opacity: 1;
 }
 
-/* Textarea for observation */
 .doctor-module-container .add-note-form textarea {
   width: 100%;
   min-height: 90px;
@@ -713,7 +711,6 @@
   color: #9ca3af;
 }
 
-/* Button */
 .doctor-module-container .add-note-form .btn.primary.small {
   padding: 0.65rem 1.4rem;
   align-items: center;

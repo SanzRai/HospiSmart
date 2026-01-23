@@ -78,7 +78,7 @@ const DESIGNATIONS = [
 const StaffManagement = () => {
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState(null); // { type: 'success'/'error', text: '...' }
+  const [message, setMessage] = useState(null); 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [selectedStaff, setSelectedStaff] = useState(null);
@@ -395,7 +395,6 @@ const StaffManagement = () => {
         </table>
       </div>
 
-      {/* Add/Edit Modal */}
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
           <div className="modal large" onClick={e => e.stopPropagation()}>
@@ -548,7 +547,6 @@ const StaffManagement = () => {
         </div>
       )}
 
-      {/* Simple View Modal */}
       {selectedStaff && (
         <div className="modal-overlay" onClick={() => setSelectedStaff(null)}>
           <div className="modal simple-view" onClick={e => e.stopPropagation()}>

@@ -70,7 +70,6 @@ const PatientQueue = () => {
         setError("No active queue entry found for today");
         setQueueData(null);
         setQueueList([]);
-        // Still allow page to render full layout
         setLoading(false);
         return;
       }
@@ -97,7 +96,6 @@ const PatientQueue = () => {
 
       setQueueList(formattedQueue);
 
-      // Optional notification when queue updates
       setNotifications(prev => [
         ...prev,
         { id: Date.now(), type: 'info', title: 'Queue Updated', message: 'Live queue status refreshed', icon: FaSync }
@@ -113,7 +111,7 @@ const PatientQueue = () => {
 
   useEffect(() => {
     fetchQueue();
-    const interval = setInterval(fetchQueue, 30000); // refresh every 30s
+    const interval = setInterval(fetchQueue, 30000); 
     return () => clearInterval(interval);
   }, [patientPhone, token]);
 
@@ -142,10 +140,8 @@ const PatientQueue = () => {
       />
 
       <main className="queue-page patient-container">
-        {/* Small live connection indicator */}
         <div className={`connection-indicator ${isConnected ? "connected" : "disconnected"}`} />
 
-        {/* Alert when your turn is near */}
         {isAlmostTurn && queueData && (
           <motion.div 
             className="queue-alert"
@@ -161,7 +157,6 @@ const PatientQueue = () => {
           </motion.div>
         )}
 
-        {/* Main Content - always show layout */}
         {loading ? (
           <div className="loading">Loading queue status...</div>
         ) : error ? (
@@ -279,7 +274,6 @@ const PatientQueue = () => {
         )}
       </main>
 
-      {/* Floating Emergency Button */}
       <motion.button 
         className="emergency-button"
         whileHover={{ scale: 1.12 }}
